@@ -13,10 +13,13 @@ st.set_page_config(page_title="Event Architect AI - 디지털 트윈", page_icon
 plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
-if "current_page" not in st.session_state:
-    st.session_state.current_page = "🏠 홈 (Home)"
+# 네비게이션 상수 정의 및 안전 세션 초기화 (ValueError 예방)
+NAV_PAGES = ["🏠 홈 (Home)", "🗺️ 대시보드 & 실시간 비교", "📄 AI 정밀 컨설팅 보고서"]
 
-# 수동 조작 위치 및 크기 세션 상태 초기화
+if "current_page" not in st.session_state or st.session_state.current_page not in NAV_PAGES:
+    st.session_state.current_page = NAV_PAGES[0]
+
+# 주요 구조물 및 부스 초기 위치/크기 세션 등록
 if "stage_x" not in st.session_state: st.session_state.stage_x = 18.0
 if "stage_y" not in st.session_state: st.session_state.stage_y = 38.0
 if "food_x" not in st.session_state: st.session_state.food_x = 32.0
@@ -26,7 +29,6 @@ if "med_y" not in st.session_state: st.session_state.med_y = 4.0
 if "wc_x" not in st.session_state: st.session_state.wc_x = 42.0
 if "wc_y" not in st.session_state: st.session_state.wc_y = 4.0
 
-# 8개 부스의 기본 위치, 크기, 카테고리 설정
 default_booths = [
     {"x": 8.0, "y": 20.0, "w": 4.0, "h": 4.0, "type": "체험부스"},
     {"x": 14.0, "y": 20.0, "w": 4.0, "h": 4.0, "type": "전시부스"},
@@ -52,8 +54,8 @@ st.sidebar.title("🎪 Event Architect AI")
 
 selected_page = st.sidebar.radio(
     "📌 페이지 이동", 
-    ["🏠 홈 (Home)", "🗺️ 대시보드 & 실시간 비교", "📄 AI 정밀 컨설팅 보고서"],
-    index=["🏠 홈 (Home)", "🗺️ 대시보드 & 실시간 비교", "📄 AI 정밀 컨설팅 보고서"].index(st.session_state.current_page)
+    NAV_PAGES,
+    index=NAV_PAGES.index(st.session_state.current_page)
 )
 
 if selected_page != st.session_state.current_page:
@@ -74,10 +76,10 @@ show_wheelchair = st.sidebar.checkbox("♿ 교통약자/휠체어 전용 동선"
 weather_mode = st.sidebar.selectbox("기상 및 시간대", ["☀️ 맑음 (정상)", "🌧️ 우천 (가설 천막/배수로)", "🌙 야간 (조명 탑/동선 가시성)"])
 
 # -----------------------------------------------------------------------------
-# 3. 렌더링 엔진 (실제 행사장 그래픽 & 순수 NumPy 가우시안 밀집도)
+# 3. 렌더링 엔진 (순수 NumPy 가우시안 + 실제 행사장 패치 디자인)
 # -----------------------------------------------------------------------------
 def compute_density_grid(grid_dim, centers_and_weights):
-    """순수 NumPy를 활용한 부드러운 가우시안 밀집도 연산 (SciPy 미사용)"""
+    """SciPy 패키지 없이 순수 NumPy로 가우시안 밀집도 연산 (ModuleNotFoundError 완전 방지)"""
     x = np.linspace(0, grid_dim, grid_dim)
     y = np.linspace(0, grid_dim, grid_dim)
     X, Y = np.meshgrid(x, y)
@@ -91,19 +93,19 @@ def draw_real_event_map(layout_data, title, is_ai=False):
     grid_dim = 50
     fig, ax = plt.subplots(figsize=(8, 7.5), dpi=120)
     
-    # 1. 배경 바닥재 (실제 행사장 스타일)
+    # 1. 실제 행사장 바닥재 스타일
     bg_color = '#0F172A' if "야간" in weather_mode else '#1E293B'
     ax.set_facecolor(bg_color)
     fig.patch.set_facecolor(bg_color)
     ax.grid(True, color='#334155', linestyle=':', linewidth=0.8, zorder=1)
 
-    # 메인 중앙 통로 레드카펫/아일 표시
+    # 메인 아일/레드카펫 동선
     ax.add_patch(patches.Rectangle((22, 0), 6, 50, fc='#334155', alpha=0.5, zorder=2))
     ax.add_patch(patches.Rectangle((0, 22), 50, 6, fc='#334155', alpha=0.5, zorder=2))
     ax.plot([25, 25], [0, 50], color='#F59E0B', linestyle='--', linewidth=1.5, zorder=3)
     ax.plot([0, 50], [25, 25], color='#F59E0B', linestyle='--', linewidth=1.5, zorder=3)
 
-    # 2. 관람객 밀집도 그라데이션 히트맵
+    # 2. 부드러운 수채화 그라데이션 밀집도 히트맵
     centers = [
         (layout_data["stage"]["x"] + 5, layout_data["stage"]["y"] + 3, 10.0, 6.0),
         (layout_data["food"]["x"] + 4, layout_data["food"]["y"] + 3, 7.0, 5.0)
@@ -116,12 +118,11 @@ def draw_real_event_map(layout_data, title, is_ai=False):
     im = ax.imshow(density_Z, cmap=cmap, origin='lower', alpha=0.55,
                    extent=[0, grid_dim, 0, grid_dim], interpolation='bicubic', zorder=3)
 
-    # 3. 주요 시설물 그리기 (실제 입체감 디자인)
-    # 🎭 메인 무대
+    # 3. 실제 행사장 스타일 시설물 렌더링
+    # 🎭 메인 무대 & 스포트라이트
     sx, sy = layout_data["stage"]["x"], layout_data["stage"]["y"]
     ax.add_patch(patches.FancyBboxPatch((sx, sy), 14, 8, boxstyle="round,pad=0.3", fc='#DC2626', ec='#FCA5A5', lw=2, zorder=6))
     ax.text(sx + 7, sy + 4, "🎭 MAIN STAGE\n(메인 무대)", color='white', fontsize=8.5, fontweight='bold', ha='center', va='center', zorder=7)
-    # 무대 스포트라이트 범주
     ax.add_patch(patches.Wedge((sx + 7, sy), 10, 220, 320, fc='#FDE047', alpha=0.15, zorder=4))
 
     # 🍔 푸드존
@@ -139,7 +140,7 @@ def draw_real_event_map(layout_data, title, is_ai=False):
     ax.add_patch(patches.FancyBboxPatch((wx, wy), 6, 5, boxstyle="round,pad=0.2", fc='#2563EB', ec='#BFDBFE', lw=2, zorder=6))
     ax.text(wx + 3, wy + 2.5, "🚽 화장실", color='white', fontsize=7.5, fontweight='bold', ha='center', va='center', zorder=7)
 
-    # 4. 부스 배치 (카테고리별 색상 구분)
+    # 4. 부스 카테고리별 테마 색상 지정
     color_map = {"체험부스": "#0284C7", "전시부스": "#7C3AED", "판매부스": "#D97706", "홍보부스": "#059669"}
     for i, b in enumerate(layout_data["booths"], 1):
         color = color_map.get(b["type"], "#2563EB")
@@ -148,15 +149,15 @@ def draw_real_event_map(layout_data, title, is_ai=False):
         ax.add_patch(rect)
         ax.text(b["x"] + b["w"]/2, b["y"] + b["h"]/2, f"B{i}\n{b['type']}", color='white', fontsize=6.5, fontweight='bold', ha='center', va='center', zorder=6)
 
-    # 5. 안전 옵션 그래픽
+    # 5. 안전 및 동선 옵션 그래픽
     if show_fire_ext:
-        ax.scatter([mx + 1, wx + 1, fx + 1], [my - 1, wy - 1, fy - 1], marker='P', s=80, color='#EF4444', label="🧯 소화기", zorder=8)
+        ax.scatter([mx + 1, wx + 1, fx + 1], [my - 1, wy - 1, fy - 1], marker='P', s=80, color='#EF4444', zorder=8)
     if show_barricade:
-        ax.plot([sx - 1, sx + 15], [sy - 2, sy - 2], color='#F59E0B', linewidth=3, linestyle='-', label="🚧 바리케이드", zorder=8)
+        ax.plot([sx - 1, sx + 15], [sy - 2, sy - 2], color='#F59E0B', linewidth=3, linestyle='-', zorder=8)
     if show_wheelchair:
-        ax.plot([0, 50], [1.5, 1.5], color='#10B981', linewidth=2, linestyle=':', label="♿ 교통약자 이동선", zorder=8)
+        ax.plot([0, 50], [1.5, 1.5], color='#10B981', linewidth=2, linestyle=':', zorder=8)
 
-    # 6. 외곽 테두리 및 출입구
+    # 6. 외곽 테두리 및 비상 출구
     ax.plot([0, 50, 50, 0, 0], [0, 0, 50, 50, 0], color='#38BDF8', linewidth=3, zorder=9)
     ax.text(25, -1.8, "🚪 MAIN ENTRANCE (주출입구)", ha='center', va='top', fontsize=8, fontweight='bold', color='#38BDF8',
             bbox=dict(boxstyle="round,pad=0.3", fc=bg_color, ec='#38BDF8', lw=1.2), zorder=10)
@@ -213,7 +214,7 @@ elif st.session_state.current_page == "🗺️ 대시보드 & 실시간 비교":
     
     tab1, tab2, tab3 = st.tabs(["🎮 1. 실시간 수동 도면 조작기", "🔄 2. 수동 도면 VS AI 추천 도면 비교", "📊 3. AI 추천 도면 정밀 평가"])
 
-    # 사용자 수동 도면 데이터 수집
+    # 수동 배치 데이터 수집
     manual_booths = []
     for i in range(1, 9):
         manual_booths.append({
@@ -232,7 +233,7 @@ elif st.session_state.current_page == "🗺️ 대시보드 & 실시간 비교":
         "booths": manual_booths
     }
 
-    # AI 자동 최적화 도면 데이터
+    # AI 최적화 도면 데이터
     ai_layout = {
         "stage": {"x": 18.0, "y": 38.0},
         "food": {"x": 35.0, "y": 8.0},
@@ -252,7 +253,7 @@ elif st.session_state.current_page == "🗺️ 대시보드 & 실시간 비교":
 
     with tab1:
         st.subheader("🛠️ 주요 시설물 & 부스 좌표 및 크기 수동 제어")
-        st.info("💡 여기서 설정한 위치와 크기는 **'2. 수동 도면 VS AI 추천 도면 비교'** 탭에 실시간으로 즉시 반영됩니다.")
+        st.info("💡 여기서 슬라이더를 통해 조정된 결과는 **'2. 수동 도면 VS AI 추천 도면 비교'** 탭의 왼쪽 도면에 실시간 반영됩니다.")
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
@@ -287,7 +288,7 @@ elif st.session_state.current_page == "🗺️ 대시보드 & 실시간 비교":
 
     with tab2:
         st.subheader("🔄 실시간 조작 도면 VS AI 최적화 추천 도면")
-        st.caption("사용자가 왼쪽 탭에서 직접 조작한 도면이 실시간으로 오른쪽 비교 도면 영역에 업데이트됩니다.")
+        st.caption("사용자가 왼쪽 탭에서 수동 조작한 도면이 오른쪽 비교 영역에 실시간 연동되어 차이점을 직관적으로 시각화합니다.")
 
         col_left, col_right = st.columns(2)
         with col_left:
