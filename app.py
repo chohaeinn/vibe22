@@ -1,3 +1,15 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Streamlit 페이지 레이아웃 설정
+st.set_page_config(
+    page_title="AI 공간 & 동선 최적화 시뮬레이터",
+    page_icon="🪄",
+    layout="wide"
+)
+
+# HTML/CSS/JS 시뮬레이터 전체 코드 (파이썬 멀티라인 문자열)
+HTML_SIMULATOR_CODE = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,12 +20,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spinSlow 20s linear infinite;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans">
 
     <!-- Header -->
     <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white p-6 shadow-lg">
-        <div class="max-w-7xl mx-mx-auto flex justify-between items-center px-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center px-4">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> AI 공간 & 동선 최적화 시뮬레이터
@@ -26,7 +47,7 @@
 
     <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- 1. 좌측 설정 옵션 패널 (12컬럼 중 4) -->
+        <!-- 1. 좌측 설정 옵션 패널 -->
         <section class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-5">
             <h2 class="text-lg font-bold text-slate-800 border-b pb-3 flex items-center gap-2">
                 <i class="fa-solid fa-sliders text-indigo-500"></i> 시뮬레이션 옵션 설정
@@ -58,7 +79,7 @@
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase mb-2">동선 설계 알고리즘</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="setRoute('loop')" id="btn-loop" class="route-btn active p-2 border rounded-xl text-xs font-medium bg-indigo-50 border-indigo-500 text-indigo-700 flex flex-col items-center gap-1">
+                    <button onclick="setRoute('loop')" id="btn-loop" class="route-btn p-2 border rounded-xl text-xs font-medium bg-indigo-50 border-indigo-500 text-indigo-700 flex flex-col items-center gap-1">
                         <i class="fa-solid fa-arrows-spin text-base"></i> 순환형 (Loop)
                     </button>
                     <button onclick="setRoute('grid')" id="btn-grid" class="route-btn p-2 border rounded-xl text-xs font-medium bg-slate-50 border-slate-200 text-slate-600 flex flex-col items-center gap-1">
@@ -80,9 +101,7 @@
                     </button>
                 </div>
                 <!-- 추가된 부스 태그 목록 -->
-                <div id="boothTags" class="flex flex-wrap gap-2 mt-3">
-                    <!-- Dynamic Tags -->
-                </div>
+                <div id="boothTags" class="flex flex-wrap gap-2 mt-3"></div>
             </div>
 
             <!-- 배리어프리 특별 옵션 체크박스 -->
@@ -99,8 +118,7 @@
             </div>
         </section>
 
-
-        <!-- 2. 우측 시뮬레이션 & 시각화 영역 (12컬럼 중 8) -->
+        <!-- 2. 우측 시뮬레이션 & 시각화 영역 -->
         <section class="lg:col-span-8 flex flex-col gap-6">
 
             <!-- 실시간 메트릭 카드 -->
@@ -133,12 +151,12 @@
                     <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg"><i class="fa-solid fa-store"></i></div>
                     <div>
                         <div class="text-xs text-slate-500 font-medium">총 배치 부스</div>
-                        <div id="metricCount" class="text-xl font-bold text-purple-600">7 개</div>
+                        <div id="metricCount" class="text-xl font-bold text-purple-600">6 개</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 공간 레이아웃 도면 캔버스 / 시뮬레이터 -->
+            <!-- 공간 레이아웃 도면 캔버스 -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
@@ -151,10 +169,10 @@
                     </div>
                 </div>
 
-                <!-- 2D 시각화 구역 (Grid) -->
+                <!-- 2D 시각화 구역 -->
                 <div id="layoutMap" class="w-full h-80 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 p-4 relative overflow-hidden flex flex-col justify-between">
                     
-                    <!-- 입구 영역 -->
+                    <!-- 입구 -->
                     <div class="flex justify-between items-center border-b border-slate-300 pb-2">
                         <span class="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow flex items-center gap-1">
                             <i class="fa-solid fa-door-open"></i> 주출입구 (경사로 & 낮은 안내데스크)
@@ -164,12 +182,10 @@
                         </span>
                     </div>
 
-                    <!-- 중앙 배치 부스들 (Dynamically Rendered) -->
-                    <div id="boothGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 my-auto">
-                        <!-- JS로 부스 카드들이 생성됨 -->
-                    </div>
+                    <!-- 동적 부스 배치 그리드 -->
+                    <div id="boothGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 my-auto z-10"></div>
 
-                    <!-- 출구 & 쉼터 영역 -->
+                    <!-- 출구 및 쉼터 -->
                     <div class="flex justify-between items-center border-t border-slate-300 pt-2">
                         <span class="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow flex items-center gap-1">
                             <i class="fa-solid fa-couch"></i> 감각 안심 쉼터 & 응급 메디컬존
@@ -179,14 +195,14 @@
                         </span>
                     </div>
 
-                    <!-- 동선 화살표 오버레이 (순환형 표시) -->
-                    <div class="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
+                    <!-- 배경 애니메이션 오버레이 -->
+                    <div class="absolute inset-0 pointer-events-none opacity-10 flex items-center justify-center">
                         <i class="fa-solid fa-arrows-spin text-9xl text-indigo-600 animate-spin-slow"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- 시뮬레이션 설명 요약 리포트 -->
+            <!-- AI 요약 피드백 -->
             <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 text-sm">
                 <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
                     <i class="fa-solid fa-lightbulb text-indigo-600"></i> AI 최적화 포인트 요약
@@ -194,19 +210,17 @@
                 <ul class="list-disc list-inside text-indigo-950 space-y-1 text-xs md:text-sm">
                     <li><strong>병목 제로 순환 구조:</strong> 입구 ➔ 스마트 안내 ➔ 메인/체험 부스 ➔ 약자 쉼터 ➔ 출구 순으로 일방통행 흐름을 유도합니다.</li>
                     <li><strong>Barrier-Free 스펙 적용:</strong> 단차(턱)를 완전히 제거하고 휠체어 반경(1.5m) 이상의 수회전 공간을 확보했습니다.</li>
-                    <li><strong>사용자 맞춤 부스 동적 배치:</strong> 추가 입력된 부스는 접근성이 가장 높은 중앙 메인 동선에 자동 정렬됩니다.</li>
+                    <li><strong>사용자 맞춤 부스 동적 배치:</strong> 추가 입력된 부스는 접근성이 가장 높은 메인 동선에 자동 정렬됩니다.</li>
                 </ul>
             </div>
         </section>
     </main>
 
-    <!-- JavaScript Logic -->
+    <!-- JS 시뮬레이션 로직 -->
     <script>
-        // 초기 상태
         let currentRoute = 'loop';
-        let customBooths = ['스마트 안내 & 휠체어 대여', '인터랙티브 포토존'];
+        let customBooths = ['수어통역 안내소', '인터랙티브 포토존'];
 
-        // 기본 추천 부스 데이터
         const defaultBooths = [
             { name: '스마트 안내 부스', type: 'bf', icon: 'fa-wheelchair' },
             { name: '메인 체험 부스 A', type: 'main', icon: 'fa-star' },
@@ -214,13 +228,11 @@
             { name: '감각 안심 휴게존', type: 'bf', icon: 'fa-heart' },
         ];
 
-        // 초기화
         window.onload = () => {
             renderBoothTags();
             updateSimulation();
         };
 
-        // 동선 버튼 변경
         function setRoute(mode) {
             currentRoute = mode;
             document.querySelectorAll('.route-btn').forEach(btn => {
@@ -230,11 +242,9 @@
             const activeBtn = document.getElementById(`btn-${mode}`);
             activeBtn.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-600');
             activeBtn.classList.add('bg-indigo-50', 'border-indigo-500', 'text-indigo-700');
-            
             updateSimulation();
         }
 
-        // 커스텀 부스 추가
         function addCustomBooth() {
             const input = document.getElementById('customBoothInput');
             const value = input.value.trim();
@@ -246,14 +256,12 @@
             }
         }
 
-        // 커스텀 부스 삭제
         function removeCustomBooth(index) {
             customBooths.splice(index, 1);
             renderBoothTags();
             updateSimulation();
         }
 
-        // 부스 태그 렌더링
         function renderBoothTags() {
             const container = document.getElementById('boothTags');
             container.innerHTML = customBooths.map((booth, idx) => `
@@ -264,17 +272,14 @@
             `).join('');
         }
 
-        // 시뮬레이션 계산 및 뷰 업데이트
         function updateSimulation() {
             const target = document.getElementById('targetAudience').value;
             const chkWidth = document.getElementById('chkPathWidth').checked;
 
-            // 1. 메트릭 업데이트
             let bfScore = 90;
             if (target === 'accessible') bfScore += 8;
             if (chkWidth) bfScore += 2;
             document.getElementById('metricBF').innerText = `${bfScore} / 100`;
-
             document.getElementById('metricWidth').innerText = chkWidth ? '2.2 m' : '1.5 m';
 
             let flowText = '순환형 (원활)';
@@ -285,11 +290,9 @@
             const totalBoothsCount = defaultBooths.length + customBooths.length;
             document.getElementById('metricCount').innerText = `${totalBoothsCount} 개`;
 
-            // 2. 맵 캔버스 부스 카드 렌더링
             const gridContainer = document.getElementById('boothGrid');
             gridContainer.innerHTML = '';
 
-            // 기본 부스 출력
             defaultBooths.forEach(b => {
                 const color = b.type === 'bf' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-indigo-50 border-indigo-300 text-indigo-800';
                 gridContainer.innerHTML += `
@@ -300,7 +303,6 @@
                 `;
             });
 
-            // 커스텀 부스 출력
             customBooths.forEach(cName => {
                 gridContainer.innerHTML += `
                     <div class="p-3 rounded-xl border bg-pink-50 border-pink-300 text-pink-800 text-xs font-bold flex flex-col items-center justify-center gap-1 shadow-sm text-center">
@@ -313,3 +315,7 @@
     </script>
 </body>
 </html>
+"""
+
+# Streamlit 내에 HTML 렌더링
+components.html(HTML_SIMULATOR_CODE, height=950, scrolling=True)
