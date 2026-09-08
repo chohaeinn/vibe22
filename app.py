@@ -1,1800 +1,340 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(
-    page_title="Event AI - AI 행사장 설계 및 동선 최적화",
-    page_icon="🎪",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-
-EVENT_AI_HTML = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event AI - AI 행사장 설계 시스템</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-<!-- Three.js Library for 3D View Engine -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  color:#1e293b;
-  background:#f8fafc;
-  overflow-x:hidden;
-}
-button,input,select,textarea{font:inherit;}
-button{cursor:pointer;transition:all 0.2s ease;}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {width:6px;height:6px;}
-::-webkit-scrollbar-track {background:#f1f5f9;}
-::-webkit-scrollbar-thumb {background:#cbd5e1;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover {background:#94a3b8;}
-
-/* App Layout */
-.app-container{
-  display:flex;
-  min-height:100vh;
-  background:#f1f5f9;
-}
-
-/* Sidebar */
-.sidebar{
-  width:240px;
-  background:#0f172a;
-  color:#94a3b8;
-  padding:20px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:20px;
-  flex-shrink:0;
-  border-right:1px solid #1e293b;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:0 8px;
-  color:#fff;
-}
-.brand-icon{
-  width:36px;
-  height:36px;
-  background:linear-gradient(135deg,#2563eb,#3b82f6);
-  border-radius:10px;
-  display:grid;
-  place-items:center;
-  font-size:18px;
-  font-weight:900;
-  box-shadow:0 4px 12px rgba(37,99,235,0.4);
-}
-.brand-title{font-size:18px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;}
-.brand-sub{font-size:10px;color:#64748b;margin-top:1px;font-weight:500;}
-
-.nav-group{display:flex;flex-direction:column;gap:4px;}
-.nav-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:11px 14px;
-  border-radius:10px;
-  font-size:13.5px;
-  font-weight:600;
-  color:#94a3b8;
-  cursor:pointer;
-}
-.nav-item:hover{background:rgba(255,255,255,0.05);color:#f1f5f9;}
-.nav-item.active{
-  background:linear-gradient(135deg, #2563eb, #3b82f6);
-  color:#ffffff;
-  box-shadow:0 4px 12px rgba(37,99,235,0.3);
-}
-.nav-icon{font-size:15px;width:18px;text-align:center;}
-
-.side-profile{
-  margin-top:auto;
-  background:#1e293b;
-  border-radius:12px;
-  padding:12px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.side-avatar{
-  width:32px;
-  height:32px;
-  background:#3b82f6;
-  border-radius:50%;
-  color:#fff;
-  display:grid;
-  place-items:center;
-  font-weight:700;
-  font-size:12px;
-}
-.side-user-info{flex:1;}
-.side-user-name{font-size:12px;font-weight:700;color:#f8fafc;}
-.side-user-btn{font-size:10px;color:#94a3b8;background:none;border:none;padding:0;margin-top:2px;cursor:pointer;}
-
-.side-banner{
-  background:linear-gradient(135deg, rgba(37,99,235,0.2), rgba(15,23,42,0.8));
-  border:1px solid rgba(59,130,246,0.25);
-  padding:14px;
-  border-radius:12px;
-  color:#e2e8f0;
-}
-.side-banner h5{font-size:12px;font-weight:800;color:#60a5fa;margin-bottom:4px;}
-.side-banner p{font-size:10.5px;color:#94a3b8;line-height:1.4;}
-
-/* Main Area */
-.main-content{
-  flex:1;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  min-width:0;
-  overflow-y:auto;
-}
-
-/* Header */
-.top-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#ffffff;
-  padding:14px 20px;
-  border-radius:16px;
-  border:1px solid #e2e8f0;
-  box-shadow:0 2px 8px rgba(0,0,0,0.02);
-}
-.top-title h2{font-size:20px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;}
-.top-title p{font-size:12px;color:#64748b;margin-top:2px;}
-
-/* Page Views */
-.page-view{display:none;}
-.page-view.active{display:block;}
-
-/* Form Card */
-.form-card{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:24px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.02);
-}
-.form-section-head{
-  font-size:16px;
-  font-weight:800;
-  color:#0f172a;
-  margin-bottom:18px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
-  gap:16px;
-  margin-bottom:20px;
-}
-.form-group{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.form-group label{
-  font-size:12px;
-  font-weight:700;
-  color:#334155;
-  display:flex;
-  align-items:center;
-  gap:4px;
-}
-.form-group input, .form-group select, .form-group textarea{
-  padding:10px 12px;
-  border:1.5px solid #cbd5e1;
-  border-radius:10px;
-  background:#f8fafc;
-  color:#0f172a;
-  font-size:13px;
-  font-weight:600;
-  outline:none;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus{
-  border-color:#2563eb;
-  background:#ffffff;
-  box-shadow:0 0 0 3px rgba(37,99,235,0.1);
-}
-
-.btn-primary{
-  background:linear-gradient(135deg, #2563eb, #1d4ed8);
-  color:#ffffff;
-  border:none;
-  padding:12px 24px;
-  border-radius:12px;
-  font-weight:800;
-  font-size:13.5px;
-  box-shadow:0 4px 14px rgba(37,99,235,0.3);
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,0.4);}
-
-.btn-secondary{
-  background:#f1f5f9;
-  color:#334155;
-  border:1px solid #cbd5e1;
-  padding:6px 12px;
-  border-radius:8px;
-  font-size:11.5px;
-  font-weight:700;
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-}
-.btn-secondary:hover{background:#e2e8f0;}
-
-.btn-warning{
-  background:#fef3c7;
-  color:#b45309;
-  border:1px solid #fde68a;
-  padding:6px 12px;
-  border-radius:8px;
-  font-size:11.5px;
-  font-weight:700;
-}
-.btn-warning.active{background:#f59e0b;color:#fff;border-color:#d97706;}
-
-.btn-danger{
-  background:#fee2e2;
-  color:#b91c1c;
-  border:1px solid #fca5a5;
-  padding:6px 12px;
-  border-radius:8px;
-  font-size:11.5px;
-  font-weight:700;
-}
-.btn-danger.active{background:#ef4444;color:#fff;border-color:#dc2626;animation:pulse 1s infinite;}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-/* Info Strip */
-.info-strip{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:12px 18px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.02);
-}
-.info-strip-group{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  flex-wrap:wrap;
-}
-.info-box{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding-right:12px;
-  border-right:1px solid #f1f5f9;
-}
-.info-box:last-child{border-right:none;}
-.info-box-icon{
-  width:32px;
-  height:32px;
-  border-radius:8px;
-  background:#eff6ff;
-  color:#2563eb;
-  display:grid;
-  place-items:center;
-  font-size:14px;
-}
-.info-box-text label{display:block;font-size:10px;color:#64748b;font-weight:700;}
-.info-box-text span{font-size:12.5px;font-weight:800;color:#0f172a;}
-
-/* Main Dashboard Grids */
-.dashboard-main-grid{
-  display:grid;
-  grid-template-columns: 1.5fr 0.9fr 1fr;
-  gap:16px;
-}
-.dashboard-bottom-grid{
-  display:grid;
-  grid-template-columns: 1fr 1.2fr 0.9fr;
-  gap:16px;
-}
-
-/* Cards */
-.card-panel{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.02);
-  display:flex;
-  flex-direction:column;
-}
-.card-head{
-  font-size:14px;
-  font-weight:800;
-  color:#0f172a;
-  margin-bottom:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.card-badge{
-  font-size:10.5px;
-  background:#eff6ff;
-  color:#2563eb;
-  padding:3px 8px;
-  border-radius:12px;
-  font-weight:700;
-}
-
-/* Canvas Wrap */
-.map-wrap{
-  position:relative;
-  width:100%;
-  height:360px;
-  background:#1e293b;
-  border-radius:12px;
-  overflow:hidden;
-  border:1px solid #334155;
-}
-#venueCanvas, #heatmapCanvas, #peopleCanvas, #container3D{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-}
-#heatmapCanvas{z-index:5;opacity:0.85;pointer-events:none;}
-#peopleCanvas{z-index:10;pointer-events:none;}
-#container3D{z-index:15;display:none;background:#0f172a;}
-
-/* Map Overlay Legend */
-.map-legend-overlay{
-  position:absolute;
-  left:10px;
-  bottom:10px;
-  z-index:20;
-  background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(6px);
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:10.5px;
-  border:1px solid #e2e8f0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.1);
-  display:grid;
-  grid-template-columns:repeat(2, 1fr);
-  gap:4px 10px;
-}
-.legend-item{display:flex;align-items:center;gap:5px;font-weight:700;color:#334155;}
-.legend-dot{width:8px;height:8px;border-radius:2px;}
-
-/* Controls Bar above/below Map */
-.map-controls-bar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:10px;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-/* Timeline Controls */
-.timeline-container{
-  background:#f8fafc;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:10px 14px;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.timeline-slider{
-  flex:1;
-  accent-color:#2563eb;
-  cursor:pointer;
-}
-.time-badge{
-  background:#2563eb;
-  color:#fff;
-  font-weight:800;
-  font-size:12px;
-  padding:4px 10px;
-  border-radius:20px;
-  min-width:70px;
-  text-align:center;
-}
-
-/* History Toolbar */
-.history-bar{
-  background:#f8fafc;
-  border:1px solid #e2e8f0;
-  padding:8px 12px;
-  border-radius:10px;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  font-size:12px;
-}
-.history-select{
-  padding:4px 8px;
-  border:1px solid #cbd5e1;
-  border-radius:6px;
-  font-size:11.5px;
-  font-weight:700;
-  background:#fff;
-  color:#0f172a;
-}
-
-/* Score Table */
-.score-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}
-.score-tbl th,.score-tbl td{padding:8px 6px;text-align:left;border-bottom:1px solid #f1f5f9;}
-.score-tbl th{color:#64748b;font-weight:700;font-size:11px;}
-.grade-badge{
-  padding:2px 8px;
-  border-radius:10px;
-  font-weight:800;
-  font-size:10.5px;
-  display:inline-block;
-}
-.gb-excel{background:#dcfce7;color:#15803d;}
-.gb-good{background:#e0f2fe;color:#0369a1;}
-.gb-warn{background:#fef3c7;color:#b45309;}
-
-/* AI Recommendations list */
-.ai-recom-list{
-  list-style:none;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  font-size:11.5px;
-  color:#334155;
-}
-.ai-recom-list li{
-  display:flex;
-  align-items:flex-start;
-  gap:6px;
-  line-height:1.4;
-  background:#f8fafc;
-  padding:8px 10px;
-  border-radius:8px;
-  border:1px solid #f1f5f9;
-}
-.ai-recom-list li::before{
-  content:"✔";
-  color:#10b981;
-  font-weight:900;
-}
-
-/* Compare Box */
-.compare-grid{
-  display:grid;
-  grid-template-columns:1fr 20px 1fr;
-  align-items:center;
-  gap:8px;
-  background:#f8fafc;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #e2e8f0;
-}
-.comp-col h5{font-size:11px;color:#64748b;margin-bottom:6px;font-weight:700;}
-.comp-val{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:4px;}
-.text-red{color:#ef4444;}
-.text-green{color:#10b981;}
-
-/* Main Dashboard Inline AI Assistant Box */
-.main-ai-assistant{
-  background:linear-gradient(135deg, #f8fafc, #eff6ff);
-  border:1.5px solid #bfdbfe;
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 2px 8px rgba(37,99,235,0.05);
-}
-.main-ai-header{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:14px;
-  font-weight:800;
-  color:#1e3a8a;
-  margin-bottom:10px;
-}
-.main-ai-chatbox{
-  background:#ffffff;
-  border:1px solid #cbd5e1;
-  border-radius:10px;
-  padding:10px 12px;
-  height:100px;
-  overflow-y:auto;
-  font-size:12px;
-  margin-bottom:10px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.chat-msg-ai{
-  background:#eff6ff;
-  color:#1e40af;
-  padding:6px 10px;
-  border-radius:8px;
-  align-self:flex-start;
-  max-width:85%;
-  line-height:1.4;
-}
-.chat-msg-user{
-  background:#2563eb;
-  color:#ffffff;
-  padding:6px 10px;
-  border-radius:8px;
-  align-self:flex-end;
-  max-width:85%;
-  line-height:1.4;
-}
-.main-ai-inputgroup{
-  display:flex;
-  gap:8px;
-}
-.main-ai-inputgroup input{
-  flex:1;
-  padding:8px 12px;
-  border:1px solid #cbd5e1;
-  border-radius:8px;
-  font-size:12px;
-  outline:none;
-}
-.main-ai-inputgroup input:focus{
-  border-color:#2563eb;
-  box-shadow:0 0 0 2px rgba(37,99,235,0.15);
-}
-
-/* Workflow Steps */
-.wf-container{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:4px;
-  margin-top:6px;
-}
-.wf-card{
-  flex:1;
-  background:#f8fafc;
-  border:1px solid #e2e8f0;
-  padding:8px 4px;
-  border-radius:8px;
-  text-align:center;
-}
-.wf-card .wf-icon{font-size:14px;margin-bottom:2px;}
-.wf-card .wf-title{font-size:10px;font-weight:800;color:#1e293b;}
-.wf-arrow{color:#cbd5e1;font-weight:900;font-size:11px;}
-
-.wf-sub-tags{
-  display:flex;
-  justify-content:space-between;
-  gap:4px;
-  margin-top:8px;
-}
-.wf-tag{
-  flex:1;
-  background:#eff6ff;
-  color:#2563eb;
-  font-size:9.5px;
-  font-weight:700;
-  text-align:center;
-  padding:4px 2px;
-  border-radius:6px;
-}
-
-/* Report Summary Panel */
-.report-sum-box{
-  background:#eff6ff;
-  border:1px solid #bfdbfe;
-  border-radius:10px;
-  padding:10px;
-  font-size:11.5px;
-  color:#1e3a8a;
-  line-height:1.4;
-  margin-bottom:10px;
-}
-
-/* Modals */
-.modal-bg{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,0.65);
-  backdrop-filter:blur(5px);
-  z-index:999;
-  display:none;
-  place-items:center;
-  padding:20px;
-}
-.modal-bg.active{display:grid;}
-.modal-content{
-  background:#ffffff;
-  width:min(95%, 880px);
-  max-height:85vh;
-  border-radius:20px;
-  padding:28px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.2);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-.modal-body{flex:1;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:18px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 행사장 설계 및 동선 시뮬레이터</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas { background-color: #f8fafc; border-radius: 0.5rem; }
+    </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
-<div class="app-container">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-icon">✦</div>
-      <div>
-        <div class="brand-title">Event AI</div>
-        <div class="brand-sub">AI 기반 행사 설계·분석 시스템</div>
-      </div>
-    </div>
-
-    <nav class="nav-group">
-      <div class="nav-item" onclick="switchPage('home', this)">
-        <span class="nav-icon">🏠</span> 홈 / 조건 입력
-      </div>
-      <div class="nav-item active" onclick="switchPage('design', this)">
-        <span class="nav-icon">📋</span> 행사 설계 메인
-      </div>
-      <div class="nav-item" onclick="switchPage('process', this)">
-        <span class="nav-icon">⚙️</span> 설계 프로세스
-      </div>
-      <div class="nav-item" onclick="openReportModal()">
-        <span class="nav-icon">📊</span> 비전 설계 리포트
-      </div>
-    </nav>
-
-    <div class="side-banner">
-      <h5>AI 지도 생성기</h5>
-      <p>AI가 만든 지도, 더 빠르고 효율적인 행사 운영을 지원합니다.</p>
-    </div>
-
-    <div class="side-profile">
-      <div class="side-avatar">추</div>
-      <div class="side-user-info">
-        <div class="side-user-name" id="sideUserName">추천님</div>
-        <button class="side-user-btn" onclick="openAuthModal()">로그아웃</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="top-title">
-        <h2 id="topTitleText">📋 행사 설계 메인</h2>
-        <p id="topSubText">실시간 AI 지능형 행사장 최적화 및 동선 분석 시스템입니다.</p>
-      </div>
-      <button class="btn-primary" onclick="runAIGenerate()">
-        ✦ AI 재배치 실행하기
-      </button>
+    <!-- 상단 헤더 -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold">AI</div>
+            <h1 class="text-xl font-bold tracking-tight">스마트 행사장 설계 및 동선 최적화 시스템</h1>
+        </div>
+        <div class="flex items-center space-x-4 text-sm">
+            <span id="clock-display" class="bg-slate-700 px-3 py-1.5 rounded-md font-mono text-indigo-400 font-semibold">시간: 09:00</span>
+            <span id="status-display" class="bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-md">상태: 대기 중</span>
+        </div>
     </header>
 
-    <!-- PAGE 1: HOME / FORM -->
-    <section id="pageHome" class="page-view">
-      <div class="form-card">
-        <div class="form-section-head">📝 행사 기본 정보 및 상세 요구사항 설정</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>📌 행사명</label>
-            <input type="text" id="inEventName" value="2025 힐링 페스티벌">
-          </div>
-          <div class="form-group">
-            <label>🏞️ 행사장 유형</label>
-            <select id="inVenueType">
-              <option value="야외" selected>야외 잔디 광장</option>
-              <option value="실내 컨벤션">실내 컨벤션 홀</option>
-              <option value="체육관">실내 체육관</option>
-              <option value="도심 거리">도심 스트리트/광장</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>📍 행사장 위치</label>
-            <input type="text" id="inLocation" value="야외 종합 운동장 & 잔디 광장">
-          </div>
-          <div class="form-group">
-            <label>👥 예상 관람객 수</label>
-            <select id="inVisitors">
-              <option value="1,000명">1,000명</option>
-              <option value="3,000명">3,000명</option>
-              <option value="5,000명" selected>5,000명</option>
-              <option value="10,000명">10,000명 이상</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>📐 행사장 면적</label>
-            <input type="text" id="inArea" value="50,000m²">
-          </div>
-          <div class="form-group">
-            <label>⏰ 운영 시간</label>
-            <input type="text" id="inTime" value="10시 - 20시">
-          </div>
-          <div class="form-group">
-            <label>🎯 주 타겟 연령대</label>
-            <select id="inTargetAge">
-              <option value="올댓/전 연령층" selected>올댓 / 전 연령층</option>
-              <option value="10~20대 청소년">10~20대 청소년 및 대학생</option>
-              <option value="30~40대 가족">30~40대 가족 단위</option>
-              <option value="50대 이상">50대 이상 시니어</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>🎪 행사 성격 / 컨셉</label>
-            <select id="inCategory">
-              <option value="휴식/힐링" selected>휴식 & 힐링 페스티벌</option>
-              <option value="학술/박람회">학술 & 산업 박람회</option>
-              <option value="음악/공연">음악 & 대형 공연</option>
-              <option value="플리마켓/체험">체험 & 플리마켓</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>🎫 입장료 정책</label>
-            <input type="text" id="inTicket" value="무료">
-          </div>
-          <div class="form-group">
-            <label>💰 예산 규모</label>
-            <input type="text" id="inBudget" value="5,000만원">
-          </div>
-          <div class="form-group">
-            <label>🚪 출입구 / 비상구 수</label>
-            <select id="inGates">
-              <option value="2개 (주출입구+비상구)">2개 (주출입구 + 비상구)</option>
-              <option value="4개 (동서남북)" selected>4개 (동서남북 사방 출입)</option>
-              <option value="6개 이상">6개 이상 (대형 관람객용)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>🏥 필수 안전/의료 구역</label>
-            <select id="inSafetyReq">
-              <option value="입구 근처 전진배치" selected>입구 근처 전진 배치 (골든타임 확보)</option>
-              <option value="중앙 분산 배치">중앙 분산 배치</option>
-              <option value="음향/무대 주변">무대 및 메인 관람구역 집중</option>
-            </select>
-          </div>
-          <div class="form-group" style="grid-column:1 / -1;">
-            <label>💬 AI 공간 배치 세부 프롬프트 / 요구사항</label>
-            <textarea id="inPrompt" rows="3">메인 무대는 중앙 상단에 배치하고, Central Lawn(잔디 휴식존) 주변으로 푸드트럭과 체험 부스를 원형으로 둘러싸 배치해주세요. 응급 의료센터는 접근성이 좋은 위치에 배치하여 비상시 이송을 최적화하세요.</textarea>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;">
-          <button class="btn-primary" onclick="runAIGenerate()">
-            ✦ 입력 정보 기반 AI 설계 생성
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 2: DESIGN DASHBOARD (MAIN PAGE) -->
-    <section id="pageDesign" class="page-view active">
-
-      <!-- MAIN PAGE INLINE AI ASSISTANT PANEL -->
-      <div class="main-ai-assistant">
-        <div class="main-ai-header">
-          <span>🤖 AI 메인 어시스턴트 (실시간 레이아웃 제어)</span>
-          <span style="font-size:11px;color:#3b82f6;font-weight:600;">— 실시간 명령어를 통해 배치도를 즉시 재구성할 수 있습니다.</span>
-        </div>
-        <div class="main-ai-chatbox" id="mainAiChatBox">
-          <div class="chat-msg-ai">
-            안녕하세요 추천님! 원하시는 배치 수정 사항이나 추가 설비를 말씀해 주시면 즉시 반영하여 새로운 최적안을 설계합니다.
-          </div>
-        </div>
-        <div class="main-ai-inputgroup">
-          <input type="text" id="mainAiInput" placeholder="예: 무대를 우측으로 옮기고 응급 부스를 중앙 통로 근처로 배치해줘" onkeypress="if(event.key==='Enter') sendMainAiMsg()">
-          <button class="btn-primary" style="padding:8px 16px;font-size:12px;" onclick="sendMainAiMsg()">보내기</button>
-        </div>
-      </div>
-
-      <!-- History Bar -->
-      <div class="history-bar">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span>📜 <b>설계 히스토리 (기록):</b></span>
-          <select id="historySelect" class="history-select" onchange="loadSelectedHistory(this.value)">
-            <!-- Dynamic Options -->
-          </select>
-        </div>
-        <span id="historyStatusBadge" style="font-size:11px;color:#2563eb;font-weight:700;">현재 버전: v1 (기본 설계안)</span>
-      </div>
-
-      <!-- Time-based Simulation Controller -->
-      <div class="timeline-container">
-        <span style="font-size:12px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:4px;">
-          ⏰ <b>시간별 관람객 시뮬레이션:</b>
-        </span>
-        <button class="btn-secondary" id="btnTimelinePlay" onclick="toggleTimelinePlay()">▶ 시간 재생</button>
-        <input type="range" id="timeSlider" class="timeline-slider" min="10" max="20" step="1" value="14" oninput="updateTimeSimulation(this.value)">
-        <div class="time-badge" id="timeDisplay">14:00</div>
-        <span style="font-size:11px;color:#64748b;font-weight:600;" id="timeDesc">관람 인원 피크 타임 (공연 및 체조)</span>
-      </div>
-
-      <!-- Top Header Strip -->
-      <div class="info-strip">
-        <div class="info-strip-group">
-          <div class="info-box">
-            <div class="info-box-icon">📌</div>
-            <div class="info-box-text"><label>행사명</label><span id="outEventName">2025 힐링 페스티벌</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">🏞️</div>
-            <div class="info-box-text"><label>행사장 유형</label><span id="outVenueType">야외</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">📍</div>
-            <div class="info-box-text"><label>행사장 위치</label><span id="outLocation">야외 종합 운동장 & 잔디 광장</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">👥</div>
-            <div class="info-box-text"><label>예상 관람객</label><span id="outVisitors">5,000명</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">📐</div>
-            <div class="info-box-text"><label>행사장 면적</label><span id="outArea">50,000m²</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">⏰</div>
-            <div class="info-box-text"><label>운영 시간</label><span id="outTime">10시 - 20시</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">🎯</div>
-            <div class="info-box-text"><label>관람객 연령대</label><span id="outAge">올댓 / 전 연령층</span></div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-icon">🎪</div>
-            <div class="info-box-text"><label>행사 성격</label><span id="outCategory">휴식</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Dashboard Grid -->
-      <div class="dashboard-main-grid" style="margin-top:14px;">
-
-        <!-- 1. Digital Twin Canvas Map (2D & 3D Supported) -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>🗺️ 행사장 배치도 (디지털 트윈 렌더링)</span>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="btn-secondary" id="btnToggle3D" onclick="toggle3DView()">🧊 3D 입체뷰 보기</button>
-              <span class="card-badge" id="layoutBadge">v1.0 AI 설계</span>
+    <!-- 메인 대시보드 컨테이너 -->
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-[1600px] mx-auto w-full">
+        
+        <!-- 좌측 제어 및 AI 어시스턴트 패널 (1칸) -->
+        <section class="lg:col-span-1 flex flex-col space-y-6">
+            <!-- 제어판 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+                <h2 class="text-base font-semibold mb-4 text-indigo-300 border-b border-slate-700 pb-2">시뮬레이션 컨트롤</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">시뮬레이션 속도</label>
+                        <input id="speed-range" type="range" min="1" max="5" value="2" class="w-full accent-indigo-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="start-btn" onclick="startSimulation()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded-lg font-medium transition text-sm shadow">시뮬레이션 시작</button>
+                        <button id="reset-btn" onclick="resetSimulation()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-4 rounded-lg font-medium transition text-sm">초기화</button>
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <div class="map-wrap" id="mapWrap">
-            <canvas id="venueCanvas"></canvas>
-            <canvas id="peopleCanvas"></canvas>
-            <div id="container3D"></div>
-
-            <!-- Legend -->
-            <div class="map-legend-overlay">
-              <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6;"></span> 무대존</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> 체험존</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> 푸드존</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> 휴식공간</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> 응급의료</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#06b6d4;"></span> 화장실</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#64748b;"></span> 출입구</div>
+            <!-- 레이어 오버프 토글 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+                <h2 class="text-base font-semibold mb-4 text-indigo-300 border-b border-slate-700 pb-2">온오프 레이어 시스템</h2>
+                <div class="space-y-3 text-sm">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span>동선 시각화 (Path)</span>
+                        <input type="checkbox" id="toggle-path" checked onchange="toggleLayer('path')" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span>인구 밀집도 히트맵</span>
+                        <input type="checkbox" id="toggle-heatmap" checked onchange="toggleLayer('heatmap')" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span>AI 최적화 가이드라인</span>
+                        <input type="checkbox" id="toggle-ai-guide" checked onchange="toggleLayer('aiGuide')" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                </div>
             </div>
-          </div>
 
-          <div class="map-controls-bar">
-            <div style="display:flex;gap:6px;">
-              <button class="btn-secondary" id="btnToggleSim" onclick="toggleSim()">
-                ▶ 시뮬레이션 시작
-              </button>
-              <button class="btn-warning" id="btnRain" onclick="toggleRainEnv()">
-                🌧️ 우천 모드
-              </button>
-              <button class="btn-danger" id="btnEmergency" onclick="triggerEmergencyEnv()">
-                🚨 응급환자 발생 (의료부스 후송)
-              </button>
+            <!-- AI 어시스턴트 리포트 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg flex-1 flex flex-col">
+                <h2 class="text-base font-semibold mb-3 text-indigo-300 border-b border-slate-700 pb-2">AI 실시간 피드백 및 리포트</h2>
+                <div id="ai-report-box" class="flex-1 bg-slate-900/70 border border-slate-700/60 rounded-lg p-3 text-xs text-slate-300 overflow-y-auto space-y-2 font-mono">
+                    <p class="text-indigo-400">[09:00] 시스템 초기화 완료. 행사장 배치가 최적화 상태입니다.</p>
+                </div>
             </div>
-            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">상태: 대기중</span>
-          </div>
-        </div>
+        </section>
 
-        <!-- 2. Density Heatmap -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>🔥 시간별 군중 밀집도 Heatmap</span>
-            <span class="card-badge" id="envBadge">일반 상태</span>
-          </div>
-          <div class="map-wrap">
-            <canvas id="heatmapCanvas"></canvas>
-          </div>
-          <div style="display:flex;justify-content:space-around;font-size:10px;color:#64748b;margin-top:10px;font-weight:700;">
-            <span style="color:#10b981;">🟢 원활</span>
-            <span style="color:#eab308;">🟡 보통</span>
-            <span style="color:#f97316;">🟠 혼잡</span>
-            <span style="color:#ef4444;">🔴 위험</span>
-          </div>
-        </div>
-
-        <!-- 3. AI Evaluation & Suggestions -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>💡 AI 평가 결과</span>
-          </div>
-          <table class="score-tbl">
-            <thead>
-              <tr><th>평가 항목</th><th>점수</th><th>등급</th></tr>
-            </thead>
-            <tbody id="evalScoreTable">
-              <tr><td>비상 안전성</td><td id="scSafety">92점</td><td><span class="grade-badge gb-excel" id="gbSafety">매우 우수</span></td></tr>
-              <tr><td>동선 효율성</td><td id="scFlow">87점</td><td><span class="grade-badge gb-good" id="gbFlow">우수</span></td></tr>
-              <tr><td>접근성</td><td id="scAccess">96점</td><td><span class="grade-badge gb-excel" id="gbAccess">매우 우수</span></td></tr>
-              <tr><td>혼잡도 분산</td><td id="scCong">84점</td><td><span class="grade-badge gb-good" id="gbCong">우수</span></td></tr>
-              <tr><td>공간 활용성</td><td id="scSpace">88점</td><td><span class="grade-badge gb-good" id="gbSpace">우수</span></td></tr>
-            </tbody>
-          </table>
-
-          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:10px 0 6px 0;">💡 AI 개선 및 맞춤 제안</div>
-          <ul class="ai-recom-list" id="aiRecomList">
-            <li>응급환자 발생 시 부스 위치 재배치 상태에서도 즉각 경로 최적화 안내</li>
-            <li>시간대별(12시-14시 피크 타임) 푸드존 인근 병목 완화용 가이드라인 설치</li>
-            <li>체험존 주변을 순환형으로 배치하여 관람객 이동 흐름 원활화</li>
-            <li>3D 입체 렌더링을 통한 시설물 높이 및 가시성 자동 검증 완료</li>
-          </ul>
-        </div>
-
-      </div>
-
-      <!-- Bottom Dashboard Grid -->
-      <div class="dashboard-bottom-grid" style="margin-top:14px;">
-
-        <!-- 1. Before / After Comparison -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>⚖️ 설계 전 / 후 비교</span>
-          </div>
-          <div class="compare-grid">
-            <div class="comp-col">
-              <h5>AI 설계 전 (기존)</h5>
-              <div class="comp-val"><span>병목 발생율</span><span class="text-red" id="compBeforeBottleneck">68%</span></div>
-              <div class="comp-val"><span>응급 이송시간</span><span id="compBeforeAccess">4분 30초</span></div>
-              <div class="comp-val"><span>사고 위험구역</span><span class="text-red" id="compBeforeRisk">3개소</span></div>
+        <!-- 우측 캔버스 및 시각화 영역 (3칸) -->
+        <section class="lg:col-span-3 flex flex-col space-y-4">
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg flex justify-between items-center">
+                <div class="text-sm text-slate-300">
+                    💡 <span class="font-medium text-white">가이드:</span> 부스는 드래그하여 이동할 수 있으며, 시간 흐름에 따른 관람객 밀집도와 병목 현상을 실시간으로 분석합니다.
+                </div>
+                <div class="flex items-center space-x-4 text-xs">
+                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-blue-500 rounded-full inline-block"></span><span>일반 관람객</span></div>
+                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-amber-500 rounded-full inline-block"></span><span>VIP 관람객</span></div>
+                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-rose-500 rounded-full inline-block"></span><span>혼잡 구역</span></div>
+                </div>
             </div>
-            <div style="text-align:center;font-weight:900;color:#cbd5e1;">→</div>
-            <div class="comp-col">
-              <h5>AI 설계 후 (최적화)</h5>
-              <div class="comp-val"><span>병목 발생율</span><span class="text-green" id="compAfterBottleneck">18%</span></div>
-              <div class="comp-val"><span>응급 이송시간</span><span class="text-green" id="compAfterAccess">1분 15초</span></div>
-              <div class="comp-val"><span>사고 위험구역</span><span class="text-green" id="compAfterRisk">0개소</span></div>
+
+            <!-- 캔버스 영역 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg flex justify-center items-center relative overflow-hidden">
+                <canvas id="simCanvas" width="900" height="600" class="shadow-inner cursor-crosshair"></canvas>
             </div>
-          </div>
-        </div>
-
-        <!-- 2. AI Workflow Process -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>⚙️ AI 행사 설계 프로세스 (Workflow)</span>
-          </div>
-          <div class="wf-container">
-            <div class="wf-card"><div class="wf-icon">📋</div><div class="wf-title">행사 정보 입력</div></div>
-            <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">🌐</div><div class="wf-title">2D/3D 트윈 생성</div></div>
-            <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">🤖</div><div class="wf-title">AI 시간별 시뮬레이션</div></div>
-            <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">🚑</div><div class="wf-title">응급 경로 자동 탐색</div></div>
-            <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">📄</div><div class="wf-title">리포트 출력</div></div>
-          </div>
-          <div class="wf-sub-tags">
-            <span class="wf-tag">시간대별 변수 반영</span>
-            <span class="wf-tag">3D 공간 렌더링</span>
-            <span class="wf-tag">응급부스 최단 후송</span>
-            <span class="wf-tag">히스토리 자동 보존</span>
-          </div>
-        </div>
-
-        <!-- 3. Report Summary -->
-        <div class="card-panel">
-          <div class="card-head">
-            <span>📄 분석 리포트 요약</span>
-          </div>
-          <div class="report-sum-box" id="reportSummaryBox">
-            AI 분석 결과, <b>2025 힐링 페스티벌</b>은 시간별 관람객 유동 및 부스 재배치 상황에서도 최단 응급 이송 경로(골든타임 2분 이내)를 완벽히 유지합니다.
-          </div>
-          <button class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-top:auto;" onclick="openReportModal()">
-            📌 이 설계안을 기반으로 상세 보고서 생성 (PDF)
-          </button>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- PAGE 3: PROCESS -->
-    <section id="pageProcess" class="page-view">
-      <div class="form-card">
-        <div class="form-section-head">⚙️ AI 행사 공간 설계 및 시간별 시뮬레이션 메커니즘</div>
-        <p style="font-size:13px;line-height:1.7;color:#334155;">
-          1. <b>시간대별(10시~20시) 유동 인구 시뮬레이션:</b> 피크 타임 및 이벤트 시간별 관람객 밀집 패턴을 인공지능 에이전트로 실시간 추산합니다.<br>
-          2. <b>동적 응급 부스 경로 탐색 (Dynamic Pathfinding):</b> AI가 재배치되어 부스의 x, y 위치가 바뀌더라도 응급환자 발생 시 최적의 최단 거리를 실시간으로 연산하여 응급 부스로 신속 이송합니다.<br>
-          3. <b>Three.js 기반 3D 실시간 공간 시뮬레이션:</b> 2D 평면도를 3D 공간으로 시각화하여 설비 간 조망 및 입체 동선을 다각도에서 분석합니다.<br>
-          4. <b>메인화면 AI 어시스턴트:</b> 메인 레이아웃 화면에서 대화형으로 지시사항을 전달하면 실시간으로 설계를 재구성하고 히스토리에 보존합니다.
-        </p>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- DETAILED PDF REPORT MODAL -->
-<div class="modal-bg" id="reportModal">
-  <div class="modal-content">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:2px solid #f1f5f9;margin-bottom:16px;">
-      <h3 style="font-size:18px;font-weight:800;color:#0f172a;">📊 AI 행사장 종합 최적화 상세 보고서</h3>
-      <button onclick="closeReportModal()" style="border:none;background:none;font-size:20px;font-weight:800;color:#64748b;">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">1. 종합 평가 요약</h4>
-        <p style="font-size:12.5px;color:#334155;line-height:1.6;" id="modalSummaryText">
-          본 보고서는 <b>2025 힐링 페스티벌</b> (야외 잔디 광장 50,000m², 예상 관람객 5,000명)의 시간별 동선 및 재배치 대응 안전성을 평가한 보고서입니다. AI 시뮬레이션 결과 종합 안전성 점수 <b>92점</b>을 기록하였으며, 응급 상황 대응성이 대폭 상향되었습니다.
-        </p>
-      </div>
-
-      <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">2. 시간대별 유동 및 응급 동선 수용 지침</h4>
-        <ul style="font-size:12px;color:#334155;line-height:1.7;padding-left:18px;" id="modalDetailList">
-          <li><b>피크 시간(12:00~15:00):</b> 푸드존 및 메인 무대 밀집도가 최고치에 달하므로 중앙 광장 가이드 라인 가동.</li>
-          <li><b>응급 부스 경로:</b> 부스 재배치 후에도 A* 및 Dijkstra 알고리즘에 의해 실시간 응급 후송 통로 3.5m 폭 확보.</li>
-          <li><b>3D 공간 시각화:</b> 주요 천막 및 무대 높이(5m) 간섭 여부 사전 검증 완료.</li>
-        </ul>
-      </div>
-
-      <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">3. 비상 대피 및 골든타임 검증 결과</h4>
-        <p style="font-size:12px;color:#334155;line-height:1.6;">
-          재배치된 응급 의료센터 위치로의 환자 후송 시간이 평균 <b>1분 15초</b>로 단축되었으며, 전 관람객 비상 대피 시 2분 이내 완전 퇴장이 가능한 안전 구조가 확보되었습니다.
-        </p>
-      </div>
-    </div>
-
-    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px;">
-      <button style="padding:10px 16px;background:#e2e8f0;border:none;border-radius:8px;font-weight:700;font-size:12px;" onclick="closeReportModal()">닫기</button>
-      <button class="btn-primary" onclick="alert('보고서가 PDF 파일로 출력되었습니다.');closeReportModal();">PDF 다운로드</button>
-    </div>
-  </div>
-</div>
-
-<script>
-/* Navigation Switching */
-function switchPage(pageId, el){
-  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-  if(el) el.classList.add('active');
-
-  const t = document.getElementById('topTitleText');
-  const s = document.getElementById('topSubText');
-
-  if(pageId === 'home'){
-    document.getElementById('pageHome').classList.add('active');
-    t.textContent = '📝 행사 조건 입력';
-    s.textContent = '상세 기본 정보 및 요구사항을 입력하시면 AI가 자동 설계합니다.';
-  } else if(pageId === 'design'){
-    document.getElementById('pageDesign').classList.add('active');
-    t.textContent = '📋 행사 설계 메인';
-    s.textContent = '실시간 AI 지능형 행사장 최적화 및 동선 분석 시스템입니다.';
-    setTimeout(initCanvases, 50);
-  } else if(pageId === 'process'){
-    document.getElementById('pageProcess').classList.add('active');
-    t.textContent = '⚙️ 설계 프로세스';
-    s.textContent = 'AI 시간별 분석, 3D 입체 시뮬레이션 및 응급 경로 추적 메커니즘입니다.';
-  }
-}
-
-function openReportModal(){ document.getElementById('reportModal').classList.add('active'); }
-function closeReportModal(){ document.getElementById('reportModal').classList.remove('active'); }
-function openAuthModal(){ alert('로그아웃 되었습니다.'); }
-
-/* APP STATE & BLUEPRINT HISTORY SYSTEM */
-let layoutHistory = [];
-let currentLayoutIndex = -1;
-
-// Preset Designs
-const layoutPresets = [
-  {
-    versionName: "v1.0 - 기본 최적안",
-    timestamp: "기본",
-    booths: {
-      stage: {x: 0.38, y: 0.08, bw: 0.24, bh: 0.16, title: '메인 무대', color: '#8b5cf6', icon: '🎭'},
-      expA: {x: 0.12, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
-      expB: {x: 0.72, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
-      food: {x: 0.10, y: 0.48, bw: 0.16, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
-      medical: {x: 0.72, y: 0.48, bw: 0.16, bh: 0.14, title: '응급 의료부스', color: '#ef4444', icon: '🏥'},
-      restroom: {x: 0.72, y: 0.70, bw: 0.14, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
-    },
-    scores: { safety: 92, flow: 87, access: 96, cong: 84, space: 88 }
-  },
-  {
-    versionName: "v2.0 - 응급 의료부스 중앙 전진안",
-    timestamp: "AI 추천",
-    booths: {
-      stage: {x: 0.35, y: 0.08, bw: 0.30, bh: 0.18, title: '메인 대형무대', color: '#8b5cf6', icon: '🎪'},
-      expA: {x: 0.08, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
-      expB: {x: 0.72, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
-      food: {x: 0.08, y: 0.55, bw: 0.20, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
-      medical: {x: 0.42, y: 0.52, bw: 0.16, bh: 0.14, title: '응급 의료부스 (중앙)', color: '#ef4444', icon: '🏥'},
-      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
-    },
-    scores: { safety: 98, flow: 91, access: 94, cong: 90, space: 85 }
-  },
-  {
-    versionName: "v3.0 - 우측 무대 & 응급부스 하단 재배치안",
-    timestamp: "AI 추천",
-    booths: {
-      stage: {x: 0.65, y: 0.10, bw: 0.28, bh: 0.18, title: '메인 무대 (우측)', color: '#8b5cf6', icon: '🎭'},
-      expA: {x: 0.08, y: 0.18, bw: 0.20, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
-      expB: {x: 0.35, y: 0.18, bw: 0.20, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
-      food: {x: 0.08, y: 0.52, bw: 0.20, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
-      medical: {x: 0.40, y: 0.72, bw: 0.18, bh: 0.14, title: '응급 의료부스 (하단)', color: '#ef4444', icon: '🏥'},
-      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
-    },
-    scores: { safety: 95, flow: 94, access: 92, cong: 95, space: 91 }
-  }
-];
-
-function initLayoutHistory() {
-  if (layoutHistory.length === 0) {
-    layoutHistory.push(JSON.parse(JSON.stringify(layoutPresets[0])));
-    currentLayoutIndex = 0;
-    updateHistorySelectUI();
-  }
-}
-
-function updateHistorySelectUI() {
-  const sel = document.getElementById('historySelect');
-  if(!sel) return;
-  sel.innerHTML = '';
-  layoutHistory.forEach((ly, idx) => {
-    const opt = document.createElement('option');
-    opt.value = idx;
-    opt.textContent = `${ly.versionName} (${ly.timestamp})`;
-    if (idx === currentLayoutIndex) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  document.getElementById('historyStatusBadge').textContent = `현재 버전: ${layoutHistory[currentLayoutIndex].versionName}`;
-}
-
-function loadSelectedHistory(index) {
-  currentLayoutIndex = parseInt(index);
-  const layout = layoutHistory[currentLayoutIndex];
-
-  document.getElementById('layoutBadge').textContent = layout.versionName;
-  document.getElementById('historyStatusBadge').textContent = `현재 버전: ${layout.versionName}`;
-
-  document.getElementById('scSafety').textContent = layout.scores.safety + '점';
-  document.getElementById('scFlow').textContent = layout.scores.flow + '점';
-  document.getElementById('scAccess').textContent = layout.scores.access + '점';
-  document.getElementById('scCong').textContent = layout.scores.cong + '점';
-  document.getElementById('scSpace').textContent = layout.scores.space + '점';
-
-  if (venueCanvas) {
-    drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
-  }
-  if (is3DActive) {
-    update3DScene();
-  }
-}
-
-function runAIGenerate(customTitle){
-  initLayoutHistory();
-
-  const nextPresetIndex = layoutHistory.length % layoutPresets.length;
-  const newLayout = JSON.parse(JSON.stringify(layoutPresets[nextPresetIndex]));
-
-  const d = new Date();
-  const timeStr = `${d.getHours()}:${d.getMinutes() < 10 ? '0' : ''}${d.getMinutes()}:${d.getSeconds() < 10 ? '0' : ''}${d.getSeconds()}`;
-  newLayout.versionName = customTitle || `v${layoutHistory.length + 1}.0 - AI 최적 재배치안`;
-  newLayout.timestamp = timeStr;
-
-  layoutHistory.push(newLayout);
-  currentLayoutIndex = layoutHistory.length - 1;
-
-  updateHistorySelectUI();
-  loadSelectedHistory(currentLayoutIndex);
-
-  if(document.getElementById('pageDesign').classList.contains('active')){
-    // Already on design
-  } else {
-    switchPage('design', document.querySelectorAll('.nav-item')[1]);
-  }
-}
-
-/* MAIN PAGE AI CHAT ASSISTANT */
-function sendMainAiMsg(){
-  const input = document.getElementById('mainAiInput');
-  const txt = input.value.trim();
-  if(!txt) return;
-
-  const chatBox = document.getElementById('mainAiChatBox');
-  chatBox.innerHTML += `<div class="chat-msg-user"><b>나:</b> ${txt}</div>`;
-  input.value = '';
-
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  setTimeout(() => {
-    chatBox.innerHTML += `<div class="chat-msg-ai"><b>AI:</b> 요청하신 "${txt}" 조건을 반영하여 행사장 부스를 재배치했습니다. 응급환자 발생 시 변경된 응급 의료부스로 신속히 찾아갈 수 있도록 스마트 동선 알고리즘을 갱신하였습니다.</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // Trigger Re-layout & Save
-    runAIGenerate(`v${layoutHistory.length + 1}.0 - 사용자 AI 맞춤 재배치`);
-  }, 600);
-}
-
-/* TIME-BASED SIMULATION SYSTEM */
-let timeInterval = null;
-let currentTime = 14;
-
-function updateTimeSimulation(timeVal) {
-  currentTime = parseInt(timeVal);
-  document.getElementById('timeDisplay').textContent = `${currentTime}:00`;
-
-  const desc = document.getElementById('timeDesc');
-  const count = people.length;
-
-  if (currentTime >= 10 && currentTime < 12) {
-    desc.textContent = '개장 초반 - 관람객 순차 입장중 (여유)';
-    setCrowdDensityFactor(0.5);
-  } else if (currentTime >= 12 && currentTime < 15) {
-    desc.textContent = '피크 타임 - 푸드존 및 메인 공연 관람객 집중 (혼잡)';
-    setCrowdDensityFactor(1.5);
-  } else if (currentTime >= 15 && currentTime < 18) {
-    desc.textContent = '오후 시간대 - 체험존 및 휴식존 고른 분산';
-    setCrowdDensityFactor(1.0);
-  } else {
-    desc.textContent = '야간 폐장 전 - 메인 무대 집중 및 출구 이동';
-    setCrowdDensityFactor(1.2);
-  }
-}
-
-function setCrowdDensityFactor(factor) {
-  if(!venueCanvas) return;
-  const targetCount = Math.floor(70 * factor);
-  if (people.length < targetCount) {
-    const w = venueCanvas.width;
-    const h = venueCanvas.height;
-    for(let i = people.length; i < targetCount; i++){
-      people.push({
-        x: w*0.1 + Math.random()*w*0.8,
-        y: h*0.15 + Math.random()*h*0.7,
-        vx: (Math.random()-0.5)*1.5,
-        vy: (Math.random()-0.5)*1.5,
-        targetX: Math.random()*w,
-        targetY: Math.random()*h,
-        speed: 0.8 + Math.random()*0.8
-      });
-    }
-  } else if (people.length > targetCount) {
-    people = people.slice(0, targetCount);
-  }
-}
-
-function toggleTimelinePlay() {
-  const btn = document.getElementById('btnTimelinePlay');
-  if (timeInterval) {
-    clearInterval(timeInterval);
-    timeInterval = null;
-    btn.textContent = '▶ 시간 재생';
-  } else {
-    btn.textContent = '⏸ 일시정지';
-    timeInterval = setInterval(() => {
-      let nextTime = currentTime + 1;
-      if (nextTime > 20) nextTime = 10;
-      document.getElementById('timeSlider').value = nextTime;
-      updateTimeSimulation(nextTime);
-    }, 2000);
-  }
-}
-
-/* 2D CANVAS & SIMULATION ENGINE */
-let venueCanvas, venueCtx;
-let peopleCanvas, peopleCtx;
-let heatmapCanvas, heatmapCtx;
-
-let simRunning = false;
-let animFrameId = null;
-
-let isRain = false;
-let isEmergency = false;
-let emergencyPos = null;
-
-let people = [];
-let raindrops = [];
-
-function initCanvases(){
-  initLayoutHistory();
-
-  venueCanvas = document.getElementById('venueCanvas');
-  peopleCanvas = document.getElementById('peopleCanvas');
-  heatmapCanvas = document.getElementById('heatmapCanvas');
-
-  if(!venueCanvas) return;
-
-  const wrap = document.getElementById('mapWrap');
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
-
-  [venueCanvas, peopleCanvas, heatmapCanvas].forEach(c => {
-    c.width = w;
-    c.height = h;
-  });
-
-  venueCtx = venueCanvas.getContext('2d');
-  peopleCtx = peopleCanvas.getContext('2d');
-  heatmapCtx = heatmapCanvas.getContext('2d');
-
-  initPeopleData(w, h);
-  initRainData(w, h);
-
-  loadSelectedHistory(currentLayoutIndex);
-
-  if (!animFrameId) {
-    renderLoop();
-  }
-}
-
-function initPeopleData(w, h){
-  people = [];
-  for(let i=0; i<70; i++){
-    people.push({
-      x: w*0.1 + Math.random()*w*0.8,
-      y: h*0.15 + Math.random()*h*0.7,
-      vx: (Math.random()-0.5)*1.5,
-      vy: (Math.random()-0.5)*1.5,
-      targetX: Math.random()*w,
-      targetY: Math.random()*h,
-      speed: 0.8 + Math.random()*0.8
-    });
-  }
-}
-
-function initRainData(w, h){
-  raindrops = [];
-  for(let i=0; i<100; i++){
-    raindrops.push({
-      x: Math.random()*w,
-      y: Math.random()*h,
-      len: 8 + Math.random()*12,
-      vy: 6 + Math.random()*6
-    });
-  }
-}
-
-/* REAL-TIME SIMULATION & DYNAMIC EMERGENCY PATHFINDING TO MEDICAL BOOTH */
-function updateSimulationLogic(){
-  if(!venueCanvas) return;
-  const w = venueCanvas.width;
-  const h = venueCanvas.height;
-
-  const currentBooths = layoutHistory[currentLayoutIndex].booths;
-  const med = currentBooths.medical;
-  // Calculate dynamic medical booth center position in case of re-layout
-  const medCenterX = med.x * w + med.bw * w * 0.5;
-  const medCenterY = med.y * h + med.bh * h * 0.5;
-
-  // 1. Update Emergency Patient Position (Heading towards Medical Booth!)
-  if (isEmergency && emergencyPos) {
-    const dx = medCenterX - emergencyPos.x;
-    const dy = medCenterY - emergencyPos.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-
-    if (dist > 8) {
-      // Emergency team & patient move dynamically to the relocated Medical Booth
-      emergencyPos.x += (dx / dist) * 2.8;
-      emergencyPos.y += (dy / dist) * 2.8;
-    }
-  }
-
-  // 2. Update People Agents
-  people.forEach(p => {
-    if (isRain) {
-      const stage = currentBooths.stage;
-      const targetX = stage.x * w + stage.bw * w * 0.5;
-      const targetY = stage.y * h + stage.bh * h * 0.5;
-      p.vx += (targetX - p.x) * 0.0005;
-      p.vy += (targetY - p.y) * 0.0005;
-      p.speed = 2.0;
-    } else if (isEmergency && emergencyPos) {
-      // Yield path to medical transport route
-      const dx = p.x - emergencyPos.x;
-      const dy = p.y - emergencyPos.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 80 && dist > 0) {
-        p.vx += (dx / dist) * 0.5; // Move aside
-        p.vy += (dy / dist) * 0.5;
-      }
-    } else {
-      p.speed = 1.0;
-      if (Math.random() < 0.02) {
-        p.targetX = Math.random() * w;
-        p.targetY = Math.random() * h;
-      }
-      p.vx += (p.targetX - p.x) * 0.0002;
-      p.vy += (p.targetY - p.y) * 0.0002;
-    }
-
-    const currentSpeed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-    if(currentSpeed > p.speed){
-      p.vx = (p.vx / currentSpeed) * p.speed;
-      p.vy = (p.vy / currentSpeed) * p.speed;
-    }
-
-    p.x += p.vx;
-    p.y += p.vy;
-
-    if(p.x < 15) { p.x = 15; p.vx *= -1; }
-    if(p.x > w-15) { p.x = w-15; p.vx *= -1; }
-    if(p.y < 15) { p.y = 15; p.vy *= -1; }
-    if(p.y > h-15) { p.y = h-15; p.vy *= -1; }
-  });
-
-  if (isRain) {
-    raindrops.forEach(r => {
-      r.y += r.vy;
-      r.x -= 1;
-      if (r.y > h) { r.y = 0; r.x = Math.random() * w; }
-    });
-  }
-}
-
-function renderLoop(){
-  if (simRunning) {
-    updateSimulationLogic();
-  }
-
-  if (peopleCanvas && venueCanvas) {
-    const w = venueCanvas.width;
-    const h = venueCanvas.height;
-    drawPeople(w, h);
-    drawDynamicHeatmap(w, h);
-  }
-
-  animFrameId = requestAnimationFrame(renderLoop);
-}
-
-function drawDetailedOutdoorVenue(w, h){
-  if(!venueCtx || currentLayoutIndex < 0) return;
-  const currentBooths = layoutHistory[currentLayoutIndex].booths;
-
-  venueCtx.fillStyle = isRain ? '#254e2b' : '#3a7d44';
-  venueCtx.fillRect(0, 0, w, h);
-
-  // Boundary Trees
-  venueCtx.fillStyle = '#2d6135';
-  for(let x=5; x<w; x+=25){
-    venueCtx.beginPath(); venueCtx.arc(x, 8, 12, 0, Math.PI*2); venueCtx.fill();
-    venueCtx.beginPath(); venueCtx.arc(x, h-8, 12, 0, Math.PI*2); venueCtx.fill();
-  }
-
-  // Pedestrian Pathways
-  venueCtx.strokeStyle = isRain ? '#b0a898' : '#e2d9c8';
-  venueCtx.lineWidth = 26;
-  venueCtx.lineCap = 'round';
-  venueCtx.beginPath();
-  venueCtx.moveTo(w*0.5, h*0.88);
-  venueCtx.lineTo(w*0.5, h*0.5);
-  venueCtx.stroke();
-
-  // Central Lawn Rest Zone
-  venueCtx.fillStyle = isRain ? '#377341' : '#4fa15a';
-  venueCtx.beginPath();
-  venueCtx.ellipse(w*0.5, h*0.5, w*0.22, h*0.18, 0, 0, Math.PI*2);
-  venueCtx.fill();
-
-  // Draw Booths
-  Object.keys(currentBooths).forEach(key => {
-    const b = currentBooths[key];
-    drawGraphicBooth(venueCtx, b.x*w, b.y*h, b.bw*w, b.bh*h, b.title, b.color, b.icon);
-  });
-
-  // Gates
-  venueCtx.fillStyle = '#1e293b';
-  venueCtx.fillRect(w*0.42, h*0.86, w*0.16, h*0.08);
-  venueCtx.fillStyle = '#ffffff';
-  venueCtx.font = 'bold 10px Pretendard, sans-serif';
-  venueCtx.textAlign = 'center';
-  venueCtx.fillText('🚪 주출입구', w*0.5, h*0.91);
-}
-
-function drawGraphicBooth(ctx, x, y, bw, bh, title, color, icon){
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.fillRect(x+3, y+3, bw, bh);
-
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(x, y, bw, bh, 6);
-  ctx.fill();
-
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 10.5px Pretendard, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`${icon} ${title}`, x + bw/2, y + bh/2 + 4);
-}
-
-function drawPeople(w, h){
-  if(!peopleCtx) return;
-  peopleCtx.clearRect(0,0,w,h);
-
-  // Draw People
-  people.forEach(p => {
-    peopleCtx.fillStyle = isRain ? '#60a5fa' : '#ffffff';
-    peopleCtx.beginPath();
-    peopleCtx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
-    peopleCtx.fill();
-  });
-
-  // Draw Emergency Evacuation Route & Dynamic Patient Path to Relocated Medical Booth
-  if (isEmergency && emergencyPos) {
-    const currentBooths = layoutHistory[currentLayoutIndex].booths;
-    const med = currentBooths.medical;
-    const medCenterX = med.x * w + med.bw * w * 0.5;
-    const medCenterY = med.y * h + med.bh * h * 0.5;
-
-    // Draw Dynamic Red Route Line leading directly to the current Medical Booth
-    peopleCtx.strokeStyle = '#ef4444';
-    peopleCtx.lineWidth = 3;
-    peopleCtx.setLineDash([6, 6]);
-    peopleCtx.beginPath();
-    peopleCtx.moveTo(emergencyPos.x, emergencyPos.y);
-    peopleCtx.lineTo(medCenterX, medCenterY);
-    peopleCtx.stroke();
-    peopleCtx.setLineDash([]);
-
-    // Flashing Patient Icon
-    peopleCtx.fillStyle = '#ef4444';
-    peopleCtx.beginPath();
-    peopleCtx.arc(emergencyPos.x, emergencyPos.y, 8, 0, Math.PI*2);
-    peopleCtx.fill();
-
-    peopleCtx.fillStyle = '#ffffff';
-    peopleCtx.font = 'bold 9px Pretendard';
-    peopleCtx.textAlign = 'center';
-    peopleCtx.fillText('🚑 이송중', emergencyPos.x, emergencyPos.y - 10);
-  }
-
-  if (isRain) {
-    peopleCtx.strokeStyle = 'rgba(147, 197, 253, 0.5)';
-    peopleCtx.lineWidth = 1.2;
-    raindrops.forEach(r => {
-      peopleCtx.beginPath();
-      peopleCtx.moveTo(r.x, r.y);
-      peopleCtx.lineTo(r.x - 2, r.y + r.len);
-      peopleCtx.stroke();
-    });
-  }
-}
-
-function drawDynamicHeatmap(w, h){
-  if(!heatmapCtx) return;
-  heatmapCtx.clearRect(0,0,w,h);
-
-  const grid = {};
-  const gridSize = 40;
-
-  people.forEach(p => {
-    const gx = Math.floor(p.x / gridSize);
-    const gy = Math.floor(p.y / gridSize);
-    const key = `${gx}_${gy}`;
-    grid[key] = (grid[key] || 0) + 1;
-  });
-
-  Object.keys(grid).forEach(key => {
-    const [gx, gy] = key.split('_').map(Number);
-    const count = grid[key];
-    const cx = gx * gridSize + gridSize/2;
-    const cy = gy * gridSize + gridSize/2;
-
-    if (count >= 2) {
-      let radius = count * 12;
-      let alpha = Math.min(0.8, count * 0.15);
-      let grad = heatmapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-      if (count >= 5) {
-        grad.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
-      } else {
-        grad.addColorStop(0, `rgba(245, 158, 11, ${alpha})`);
-      }
-      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-      heatmapCtx.fillStyle = grad;
-      heatmapCtx.beginPath();
-      heatmapCtx.arc(cx, cy, radius, 0, Math.PI*2);
-      heatmapCtx.fill();
-    }
-  });
-}
-
-function toggleSim(){
-  simRunning = !simRunning;
-  const btn = document.getElementById('btnToggleSim');
-  const timer = document.getElementById('simTimer');
-
-  if (simRunning) {
-    btn.textContent = '⏸ 시뮬레이션 일시정지';
-    timer.textContent = '상태: 실시간 군중 시뮬레이션 연산 중 ▶';
-  } else {
-    btn.textContent = '▶ 시뮬레이션 시작';
-    timer.textContent = '상태: 대기중';
-  }
-}
-
-function toggleRainEnv(){
-  isRain = !isRain;
-  const btn = document.getElementById('btnRain');
-  const badge = document.getElementById('envBadge');
-
-  if (isRain) {
-    btn.classList.add('active');
-    btn.textContent = '🌧️ 우천 모드 (ON)';
-    badge.textContent = '🌧️ 기상변수: 강우 발생';
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '🌧️ 우천 모드';
-    if(!isEmergency) badge.textContent = '일반 상태';
-  }
-  if (venueCanvas) drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
-}
-
-function triggerEmergencyEnv(){
-  isEmergency = !isEmergency;
-  const btn = document.getElementById('btnEmergency');
-  const badge = document.getElementById('envBadge');
-
-  if (isEmergency) {
-    btn.classList.add('active');
-    btn.textContent = '🚨 응급상황 해제';
-    badge.textContent = '🚨 응급환자 발생! 의료부스로 이송 중';
-
-    // Set emergency position far from medical booth
-    const w = venueCanvas.width;
-    const h = venueCanvas.height;
-    emergencyPos = { x: w * 0.15, y: h * 0.25 };
-
-    if(!simRunning) toggleSim();
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '🚨 응급환자 발생 (의료부스 후송)';
-    emergencyPos = null;
-    if(!isRain) badge.textContent = '일반 상태';
-  }
-}
-
-/* THREE.JS 3D VIEW ENGINE INTEGRATION */
-let is3DActive = false;
-let scene3D, camera3D, renderer3D;
-
-function toggle3DView(){
-  is3DActive = !is3DActive;
-  const container3D = document.getElementById('container3D');
-  const btn = document.getElementById('btnToggle3D');
-
-  if (is3DActive) {
-    container3D.style.display = 'block';
-    btn.textContent = '🗺️ 2D 평면도 보기';
-    init3DScene();
-  } else {
-    container3D.style.display = 'none';
-    btn.textContent = '🧊 3D 입체뷰 보기';
-  }
-}
-
-function init3DScene(){
-  const container = document.getElementById('container3D');
-  container.innerHTML = '';
-
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-
-  scene3D = new THREE.Scene();
-  scene3D.background = new THREE.Color(0x0f172a);
-
-  camera3D = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-  camera3D.position.set(0, 150, 180);
-  camera3D.lookAt(0, 0, 0);
-
-  renderer3D = new THREE.WebGLRenderer({ antialias: true });
-  renderer3D.setSize(w, h);
-  container.appendChild(renderer3D.domElement);
-
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene3D.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(50, 100, 50);
-  scene3D.add(dirLight);
-
-  // Ground Plane (Grass Field)
-  const groundGeo = new THREE.PlaneGeometry(200, 140);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x2e7d32 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  scene3D.add(ground);
-
-  update3DScene();
-
-  function animate3D() {
-    if (is3DActive) {
-      requestAnimationFrame(animate3D);
-      scene3D.rotation.y += 0.003; // Auto Rotation for 3D View
-      renderer3D.render(scene3D, camera3D);
-    }
-  }
-  animate3D();
-}
-
-function update3DScene(){
-  if (!scene3D) return;
-
-  // Clear existing booth meshes
-  for(let i = scene3D.children.length - 1; i >= 0; i--) {
-    if(scene3D.children[i].userData.isBooth) {
-      scene3D.remove(scene3D.children[i]);
-    }
-  }
-
-  const currentBooths = layoutHistory[currentLayoutIndex].booths;
-
-  Object.keys(currentBooths).forEach(key => {
-    const b = currentBooths[key];
-    const bw = b.bw * 200;
-    const bh = b.bh * 140;
-    const bx = (b.x - 0.5) * 200 + bw/2;
-    const bz = (b.y - 0.5) * 140 + bh/2;
-
-    const height = key === 'stage' ? 18 : 10;
-    const geo = new THREE.BoxGeometry(bw, height, bh);
-    const colorHex = parseInt(b.color.replace('#', '0x'));
-    const mat = new THREE.MeshLambertMaterial({ color: colorHex });
-
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(bx, height/2, bz);
-    mesh.userData.isBooth = true;
-    scene3D.add(mesh);
-  });
-}
-
-window.addEventListener('load', () => {
-  switchPage('design', document.querySelectorAll('.nav-item')[1]);
-});
-</script>
+        </section>
+
+    </main>
+
+    <!-- 자바스크립트 시뮬레이션 로직 -->
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 상태 변수
+        let isRunning = false;
+        let simTime = 9 * 60; // 09:00 분 단위 표현 (540분)
+        let visitors = [];
+        let booths = [
+            { id: 1, name: '메인 스테이지', x: 100, y: 100, width: 180, height: 100, color: '#4f46e5' },
+            { id: 2, name: '기업 홍보관 A', x: 350, y: 100, width: 140, height: 100, color: '#0ea5e9' },
+            { id: 3, name: '신기술 체험존', x: 550, y: 100, width: 220, height: 100, color: '#10b981' },
+            { id: 4, name: '스타트업 파빌리온', x: 100, y: 350, width: 280, height: 120, color: '#f59e0b' },
+            { id: 5, name: '휴게 및 식음료', x: 450, y: 350, width: 320, height: 120, color: '#ec4899' }
+        ];
+
+        let layers = {
+            path: true,
+            heatmap: true,
+            aiGuide: true
+        };
+
+        let selectedBooth = null;
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // 레이어 토글 함수
+        function toggleLayer(layerName) {
+            layers[layerName] = document.getElementById(`toggle-${layerName}`).checked;
+        }
+
+        // 마우스 이벤트 (부스 드래그 앤 드롭 구현)
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            booths.forEach(booth => {
+                if (mouseX >= booth.x && mouseX <= booth.x + booth.width &&
+                    mouseY >= booth.y && mouseY <= booth.y + booth.height) {
+                    selectedBooth = booth;
+                    isDragging = true;
+                    dragOffsetX = mouseX - booth.x;
+                    dragOffsetY = mouseY - booth.y;
+                }
+            });
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !selectedBooth) return;
+            const rect = canvas.getBoundingClientRect();
+            selectedBooth.x = e.clientX - rect.left - dragOffsetX;
+            selectedBooth.y = e.clientY - rect.top - dragOffsetY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            selectedBooth = null;
+        });
+
+        // 관람객 생성 함수 (시간대별 변수 반영)
+        function spawnVisitors() {
+            // 시간대별 유입 인원 조절 (점심시간 12:00~13:00 감소, 오후 14:00 피크)
+            let hour = simTime / 60;
+            let spawnRate = 0.5;
+            if (hour >= 10 && hour <= 11) spawnRate = 1.5;
+            if (hour >= 12 && hour < 13) spawnRate = 0.2; // 점심 시간
+            if (hour >= 13 && hour <= 15) spawnRate = 2.0; // 오후 피크
+
+            if (Math.random() < spawnRate && visitors.size < 150) {
+                let targetBooth = booths[Math.floor(Math.random() * booths.length)];
+                visitors.push({
+                    x: Math.random() * 50 + 20,
+                    y: Math.random() * 50 + 500,
+                    targetX: targetBooth.x + targetBooth.width / 2,
+                    targetY: targetBooth.y + targetBooth.height / 2,
+                    speed: Math.random() * 1.5 + 1,
+                    type: Math.random() > 0.2 ? 'normal' : 'vip',
+                    pathHistory: []
+                });
+            }
+        }
+
+        // 시뮬레이션 루프 업데이트
+        function updateSimulation() {
+            if (!isRunning) return;
+
+            // 시간 증가 (속도 슬라이더 연동)
+            let speedVal = parseInt(document.getElementById('speed-range').value);
+            simTime += speedVal;
+
+            if (simTime >= 18 * 60) {
+                isRunning = false;
+                document.getElementById('status-display').innerText = '상태: 시뮬레이션 종료';
+                document.getElementById('status-display').className = 'bg-amber-900/50 text-amber-300 border border-amber-700 px-3 py-1.5 rounded-md';
+                addLog('시뮬레이션이 종료되었습니다. 하루 동안의 누적 동선 데이터가 산출되었습니다.');
+                return;
+            }
+
+            // 시간 표시 갱신
+            let h = Math.floor(simTime / 60);
+            let m = simTime % 60;
+            document.getElementById('clock-display').innerText = `시간: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+            spawnVisitors();
+
+            // 관람객 이동 업데이트
+            visitors.forEach((v, index) => {
+                let dx = v.targetX - v.x;
+                let dy = v.targetY - v.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 5) {
+                    // 목적지 도착 시 다른 부스로 재설정 혹은 퇴장
+                    let nextBooth = booths[Math.floor(Math.random() * booths.length)];
+                    v.targetX = nextBooth.x + nextBooth.width / 2;
+                    v.targetY = nextBooth.y + nextBooth.height / 2;
+                } else {
+                    v.x += (dx / dist) * v.speed;
+                    v.y += (dy / dist) * v.speed;
+                }
+
+                // 동선 기록 저장 (최근 20개)
+                if (layers.path) {
+                    v.pathHistory.push({x: v.x, y: v.y});
+                    if (v.pathHistory.length > 20) v.pathHistory.shift();
+                }
+            });
+
+            // 주기적인 AI 분석 리포트 추가
+            if (simTime === 11 * 60) addLog('[11:00] 오전 피크 타임 진입: 신기술 체험존 주변 병목 현상 감지.');
+            if (simTime === 13 * 60) addLog('[13:00] 점심 시간대: 휴게 및 식음료 구역 집중도 급증.');
+            if (simTime === 14 * 30) addLog('[14:30] AI 최적화 제안: 메인 스테이지 통로 폭을 15% 확장 권장.');
+        }
+
+        function addLog(text) {
+            const box = document.getElementById('ai-report-box');
+            box.innerHTML += `<p class="text-slate-300">${text}</p>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // 렌더링 함수
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 히트맵 레이어 렌더링
+            if (layers.heatmap) {
+                visitors.forEach(v => {
+                    let gradient = ctx.createRadialGradient(v.x, v.y, 2, v.x, v.y, 25);
+                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)');
+                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(v.x, v.y, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // 2. 동선(Path) 레이어 렌더링
+            if (layers.path) {
+                ctx.lineWidth = 1;
+                visitors.forEach(v => {
+                    if (v.pathHistory.length > 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(v.pathHistory[0].x, v.pathHistory[0].y);
+                        for (let i = 1; i < v.pathHistory.length; i++) {
+                            ctx.lineTo(v.pathHistory[i].x, v.pathHistory[i].y);
+                        }
+                        ctx.strokeStyle = 'rgba(99, 102, 241, 0.15)';
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            // 3. AI 최적화 가이드라인 렌더링
+            if (layers.aiGuide) {
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(50, 300);
+                ctx.lineTo(850, 300);
+                ctx.stroke();
+                ctx.setLineDash([]); // 리셋
+            }
+
+            // 4. 부스 렌더링
+            booths.forEach(booth => {
+                ctx.fillStyle = booth.color;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(booth.x, booth.y, booth.width, booth.height);
+                ctx.shadowBlur = 0; // 섀도우 초기화
+
+                // 부스 테두리
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(booth.x, booth.y, booth.width, booth.height);
+
+                // 부스 텍스트
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(booth.name, booth.x + booth.width / 2, booth.y + booth.height / 2 + 5);
+            });
+
+            // 5. 관람객 입자 렌더링
+            visitors.forEach(v => {
+                ctx.fillStyle = v.type === 'vip' ? '#f59e0b' : '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(v.x, v.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // 제어 버튼 액션
+        function startSimulation() {
+            isRunning = true;
+            document.getElementById('status-display').innerText = '상태: 시뮬레이션 구동 중';
+            document.getElementById('status-display').className = 'bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-md';
+        }
+
+        function resetSimulation() {
+            isRunning = false;
+            simTime = 9 * 60;
+            visitors = [];
+            document.getElementById('clock-display').innerText = '시간: 09:00';
+            document.getElementById('status-display').innerText = '상태: 대기 중';
+            document.getElementById('status-display').className = 'bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md';
+            document.getElementById('ai-report-box').innerHTML = '<p class="text-indigo-400">[09:00] 시스템 초기화 완료. 행사장 배치가 최적화 상태입니다.</p>';
+        }
+
+        // 애니메이션 루프 실행
+        function loop() {
+            updateSimulation();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
 </body>
 </html>
-"""
-
-components.html(EVENT_AI_HTML, height=1300, scrolling=True)
