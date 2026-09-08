@@ -11,7 +11,7 @@ import seaborn as sns
 st.set_page_config(page_title="Event Architect AI", layout="wide")
 
 # Matplotlib 한글 폰트 설정 (Windows/Mac 호환)
-plt.rcParams['font.family'] = 'Malgun Gothic' if plt.os.name == 'nt' else 'sans-serif'
+plt.rcParams['font.family'] = 'Malgun Gothic' if os.name == 'nt' else 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
 # -----------------------------------------------------------------------------
