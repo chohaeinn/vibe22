@@ -1,3 +1,15 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# 스트림릿 페이지 설정 (넓은 레이아웃 적용)
+st.set_page_config(
+    page_title="Event AI - 스마트 행사장 설계 및 동선 최적화 시스템",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# HTML, CSS, JavaScript가 통합된 대시보드 애플리케이션 코드
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -12,7 +24,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-[#0b0f19] text-slate-100 font-sans min-h-screen flex">
+<body class="bg-[#0b0f19] text-slate-100 font-sans min-h-screen flex m-0">
 
     <!-- 좌측 사이드바 -->
     <aside class="w-64 bg-[#111827] border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
@@ -52,7 +64,7 @@
         <header class="bg-[#111827] border-b border-slate-800 px-6 py-4 flex justify-between items-center shadow-sm">
             <div class="flex items-center space-x-4">
                 <h2 class="text-lg font-bold text-white">행사 설계</h2>
-                <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">행사 정보를 입력하여 AI 최적의 행사장을 설계해드립니다.</span>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 hidden sm:inline-block">행사 정보를 입력하여 AI 최적의 행사장을 설계해드립니다.</span>
             </div>
             <div class="flex items-center space-x-3">
                 <span id="clock-display" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 px-3 py-1.5 rounded-lg font-mono text-xs font-bold">시간: 09:00</span>
@@ -69,7 +81,7 @@
             <div class="bg-[#111827] border border-slate-800 rounded-xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 text-center divide-y sm:divide-y-0 sm:divide-x divide-slate-800">
                 <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">행사명</p><p class="text-xs font-bold text-white mt-1">2026 통합 엑스포</p></div>
                 <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">홀 규모</p><p class="text-xs font-bold text-white mt-1">4홀</p></div>
-                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">행사 형태</p><p class="text-xs font-bold text-white mt-1">야외 겸 실내형 & 청년 소통</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">행사 형태</p><p class="text-xs font-bold text-white mt-1">야외 겸 실내형</p></div>
                 <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">목표 인원</p><p class="text-xs font-bold text-white mt-1">5,000명</p></div>
                 <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">소요 시간</p><p class="text-xs font-bold text-white mt-1">9시간</p></div>
                 <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">예산 규모</p><p class="text-xs font-bold text-white mt-1">5,000만원</p></div>
@@ -92,9 +104,8 @@
                             <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">드래그 이동 가능</span>
                         </div>
                     </div>
-                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[360px]">
+                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[340px]">
                         <canvas id="simCanvas" width="560" height="340" class="rounded shadow-inner cursor-crosshair w-full h-auto max-w-full"></canvas>
-                        <!-- 실시간 범례 오버레이 -->
                         <div class="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur border border-slate-700/60 p-2 rounded-lg text-[10px] space-y-1">
                             <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span><span class="text-slate-300">일반 관람객</span></div>
                             <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 bg-amber-500 rounded-full"></span><span class="text-slate-300">VIP 관람객</span></div>
@@ -103,7 +114,7 @@
                     </div>
                 </div>
 
-                <!-- 히트맵 뷰 (실시간 동기화) -->
+                <!-- 히트맵 뷰 (실시간 시간대별 동기화) -->
                 <div class="bg-[#111827] border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col">
                     <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
                         <div class="flex items-center space-x-2">
@@ -116,7 +127,7 @@
                             <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-red-500"></span><span>혼잡</span></span>
                         </div>
                     </div>
-                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[360px]">
+                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[340px]">
                         <canvas id="heatmapCanvas" width="560" height="340" class="rounded shadow-inner w-full h-auto max-w-full"></canvas>
                         <div class="absolute bottom-3 right-3 bg-slate-900/90 backdrop-blur border border-slate-700/60 px-3 py-1.5 rounded-lg text-[11px] text-indigo-300 font-mono" id="heatmap-status-text">
                             상태: 시뮬레이션 대기 중 (동기화됨)
@@ -140,7 +151,7 @@
                         </div>
                         <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
                             <span class="text-slate-300">동선 효율성</span>
-                            <div class="flex items-center space-x-3"><span class="font-bold text-white" id="score-efficiency">87점</span><span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px]">우수</span></div>
+                            <div class="flex items-center space-x-3"><span class="font-bold text-white">87점</span><span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px]">우수</span></div>
                         </div>
                         <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
                             <span class="text-slate-300">접근성</span>
@@ -160,15 +171,15 @@
                             <span>🛠️</span><span>AI 개선 맞춤사항</span>
                         </h3>
                         <ul class="space-y-2.5 text-xs text-slate-300" id="ai-suggestions-list">
-                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>공간 배치 최적화: 시뮬레이션 시간대별 이동 동선과 부스 유입율이 정확히 일치하도록 동기화되었습니다.</span></li>
-                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오전 개막 러시 타임(10:00)에는 메인 스테이지 주변 집중도가 가중됩니다.</span></li>
-                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>점심 시간(12:00~13:00)에는 식음료 및 휴게 부스로 관람객 이동이 쏠리는 현상이 시뮬에 반영됩니다.</span></li>
-                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오후 피크(14:00 이후) 신기술 체험존의 병목 현상에 대비해 우회 통로 확보를 권장합니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>시간대별 관람객 밀집 공간이 시뮬레이션 엔진과 완벽하게 동기화되었습니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오전 개막 직후(10시~11시)에는 신기술 체험존 및 메인스테이지 부스로 인원이 집중됩니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>점심 시간(12시~13시)대에는 휴게 및 식음료 부스로 트래픽이 완전히 이동합니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오후 시간(14시 이후)에는 기업 홍보관 A 중심으로 VIP 및 관람객 동선이 재배치됩니다.</span></li>
                         </ul>
                     </div>
                     <div class="mt-4 pt-3 border-t border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400">
-                        <span>💡 실시간 시뮬레이션 피드백이 완벽 동기화 적용 중입니다.</span>
-                        <button onclick="addAiLog()" class="text-indigo-400 hover:text-indigo-300 font-medium underline">수동 리포트 갱신</button>
+                        <span>💡 실시간 동기화 상태 활성화됨</span>
+                        <button onclick="addAiLog()" class="text-indigo-400 hover:text-indigo-300 font-medium underline">동기화 리포트 갱신</button>
                     </div>
                 </div>
             </div>
@@ -184,10 +195,9 @@
         const heatCtx = heatCanvas.getContext('2d');
 
         let isRunning = false;
-        let simTime = 9 * 60; // 09:00 (분 단위)
+        let simTime = 9 * 60; // 09:00 시작
         let visitors = [];
 
-        // 행사장 부스 객체 (시뮬레이션과 히트맵 좌표 공유)
         let booths = [
             { id: 1, name: '메인 스테이지', x: 180, y: 30, width: 200, height: 70, color: '#4f46e5' },
             { id: 2, name: '기업 홍보관 A', x: 40, y: 130, width: 120, height: 90, color: '#0ea5e9' },
@@ -201,7 +211,6 @@
         let dragOffsetX = 0;
         let dragOffsetY = 0;
 
-        // 드래그 앤 드롭 이벤트 처리
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -248,60 +257,58 @@
         function triggerAiRedesign() {
             simTime = 9 * 60;
             visitors = [];
-            // 무작위 재배치 애니메이션 효과
             booths.forEach(b => {
                 b.x = Math.max(20, Math.min(350, b.x + (Math.random() * 40 - 20)));
                 b.y = Math.max(20, Math.min(220, b.y + (Math.random() * 40 - 20)));
             });
-            document.getElementById('heatmap-status-text').innerText = '상태: AI가 행사장 배치를 재최적화했습니다.';
+            document.getElementById('heatmap-status-text').innerText = '상태: AI 최적화 재배치 완료';
         }
 
         function addAiLog() {
             const list = document.getElementById('ai-suggestions-list');
             const item = document.createElement('li');
             item.className = 'flex items-start space-x-2';
-            item.innerHTML = `<span class="text-indigo-400 font-bold">•</span><span>실시간 동기화 업데이트: 현재 시각(${Math.floor(simTime/60)}:${String(simTime%60).padStart(2,'0')}) 기준 병목 위험 구간이 해소되었습니다.</span>`;
+            item.innerHTML = `<span class="text-indigo-400 font-bold">•</span><span>동기화 리포트 갱신 완료: 현재 시각(${Math.floor(simTime/60)}:${String(simTime%60).padStart(2,'0')}) 기준 군중 흐름이 안정적입니다.</span>`;
             list.prepend(item);
         }
 
-        // 관람객 생성 로직 (시간대별 변수와 공간 동기화)
+        // 시간대별 밀집 공간 타겟팅 동기화 함수
         function updateVisitors() {
             if (!isRunning) return;
 
-            simTime += 2; // 시뮬레이션 배속
-            if (simTime >= 18 * 60) simTime = 9 * 60; // 반복 루프
+            simTime += 2;
+            if (simTime >= 18 * 60) simTime = 9 * 60;
 
             let h = Math.floor(simTime / 60);
             let m = simTime % 60;
             document.getElementById('clock-display').innerText = `시간: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             document.getElementById('heatmap-status-text').innerText = `동기화 시간: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-            // 시간대별 특정 부스로의 쏠림 현상(가중치) 설정
-            let targetBooth = booths[0]; // 기본 메인스테이지
+            // ⏰ 시간대별 밀집 타겟 공간 분기 설정 (시뮬레이션 & 히트맵 동기화 핵심)
+            let targetBooth = booths[0];
             if (h >= 10 && h < 12) {
-                targetBooth = booths[2]; // 신기술 체험존 집중
+                targetBooth = booths[2]; // 오전: 신기술 체험존 집중
             } else if (h >= 12 && h < 13) {
-                targetBooth = booths[4]; // 휴게 및 식음료 집중
-            } else if (h >= 14) {
-                targetBooth = booths[1]; // 기업 홍보관 집중
+                targetBooth = booths[4]; // 점심: 휴게 및 식음료 집중
+            } else if (h >= 13 && h < 15) {
+                targetBooth = booths[0]; // 오후 초기: 메인 스테이지 집중
+            } else if (h >= 15) {
+                targetBooth = booths[1]; // 오후 후반: 기업 홍보관 A 집중
             } else {
                 targetBooth = booths[Math.floor(Math.random() * booths.length)];
             }
 
-            // 관람객 스폰
-            if (visitors.length < 100 && Math.random() < 0.6) {
+            if (visitors.length < 110 && Math.random() < 0.7) {
                 visitors.push({
                     x: 280 + (Math.random() * 40 - 20),
                     y: 330,
                     targetBooth: targetBooth,
                     speed: Math.random() * 1.2 + 0.8,
-                    type: Math.random() > 0.15 ? 'normal' : 'vip'
+                    type: Math.random() > 0.2 ? 'normal' : 'vip'
                 });
             }
 
-            // 이동 업데이트
             visitors.forEach(v => {
-                // 실시간으로 변경된 부스 위치로 타겟 좌표 갱신
                 let tx = v.targetBooth.x + v.targetBooth.width / 2;
                 let ty = v.targetBooth.y + v.targetBooth.height / 2;
 
@@ -310,7 +317,6 @@
                 let dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < 5) {
-                    // 도착 후 다른 부스로 변경
                     v.targetBooth = booths[Math.floor(Math.random() * booths.length)];
                 } else {
                     v.x += (dx / dist) * v.speed;
@@ -319,12 +325,10 @@
             });
         }
 
-        // 렌더링 루프 (시뮬레이션 캔버스 & 히트맵 캔버스 동시 드로잉)
         function drawScene() {
-            // 1. 시뮬레이션 캔버스 드로잉
+            // 1. 행사장 배치도 드로잉
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 바닥 그리드 및 통로 가이드라인
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
             ctx.lineWidth = 1;
             for (let i = 0; i < canvas.width; i += 30) {
@@ -334,15 +338,14 @@
                 ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
             }
 
-            // 출입구 표시
+            // 출입구
             ctx.fillStyle = '#64748b';
-            ctx.fillRect(250, 320, 60, 20);
+            ctx.fillRect(250, 315, 60, 20);
             ctx.fillStyle = '#ffffff';
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('입출구', 280, 334);
+            ctx.fillText('입출구', 280, 329);
 
-            // 부스 렌더링
             booths.forEach(b => {
                 ctx.fillStyle = b.color;
                 ctx.fillRect(b.x, b.y, b.width, b.height);
@@ -356,7 +359,6 @@
                 ctx.fillText(b.name, b.x + b.width / 2, b.y + b.height / 2 + 4);
             });
 
-            // 관람객 렌더링
             visitors.forEach(v => {
                 ctx.fillStyle = v.type === 'vip' ? '#f59e0b' : '#3b82f6';
                 ctx.beginPath();
@@ -367,7 +369,6 @@
             // 2. 히트맵 캔버스 동기화 드로잉
             heatCtx.clearRect(0, 0, heatCanvas.width, heatCanvas.height);
             
-            // 히트맵 배경 부스 배치 복사
             booths.forEach(b => {
                 heatCtx.fillStyle = '#1e293b';
                 heatCtx.fillRect(b.x, b.y, b.width, b.height);
@@ -379,15 +380,14 @@
                 heatCtx.fillText(b.name, b.x + b.width / 2, b.y + b.height / 2 + 4);
             });
 
-            // 관람객 위치 기반 밀집도 히트맵 방사형 그라데이션 적용
             visitors.forEach(v => {
-                let gradient = heatCtx.createRadialGradient(v.x, v.y, 2, v.x, v.y, 30);
-                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.25)'); // 중심 밀집 고온
-                gradient.addColorStop(0.5, 'rgba(234, 179, 8, 0.1)'); // 중간 온도
+                let gradient = heatCtx.createRadialGradient(v.x, v.y, 2, v.x, v.y, 35);
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)'); // 고밀도 (빨강)
+                gradient.addColorStop(0.5, 'rgba(234, 179, 8, 0.12)'); // 중간 밀도 (노랑)
                 gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
                 heatCtx.fillStyle = gradient;
                 heatCtx.beginPath();
-                heatCtx.arc(v.x, v.y, 30, 0, Math.PI * 2);
+                heatCtx.arc(v.x, v.y, 35, 0, Math.PI * 2);
                 heatCtx.fill();
             });
         }
@@ -402,3 +402,7 @@
     </script>
 </body>
 </html>
+"""
+
+# Streamlit 전용 컴포넌트 호출로 렌더링 (SyntaxError 원천 차단)
+components.html(html_code, height=900, scrolling=True)
