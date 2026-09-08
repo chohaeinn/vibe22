@@ -14,8 +14,10 @@ EVENT_AI_HTML = r"""
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event AI - AI 행사장 설계 및 동선 최적화 시스템</title>
+<title>Event AI - AI 행사장 설계 시스템</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<!-- Three.js Library for 3D View Engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
@@ -236,7 +238,6 @@ button{cursor:pointer;transition:all 0.2s ease;}
   gap:4px;
 }
 .btn-secondary:hover{background:#e2e8f0;}
-.btn-secondary.active{background:#2563eb;color:#fff;border-color:#1d4ed8;}
 
 .btn-warning{
   background:#fef3c7;
@@ -309,7 +310,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 /* Main Dashboard Grids */
 .dashboard-main-grid{
   display:grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.5fr 0.9fr 1fr;
   gap:16px;
 }
 .dashboard-bottom-grid{
@@ -355,18 +356,16 @@ button{cursor:pointer;transition:all 0.2s ease;}
   border-radius:12px;
   overflow:hidden;
   border:1px solid #334155;
-  cursor: grab;
 }
-.map-wrap:active{cursor: grabbing;}
-#venueCanvas, #routeCanvas, #heatmapCanvas, #peopleCanvas{
+#venueCanvas, #heatmapCanvas, #peopleCanvas, #container3D{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
 }
-#routeCanvas{z-index:3;pointer-events:none;}
 #heatmapCanvas{z-index:5;opacity:0.85;pointer-events:none;}
 #peopleCanvas{z-index:10;pointer-events:none;}
+#container3D{z-index:15;display:none;background:#0f172a;}
 
 /* Map Overlay Legend */
 .map-legend-overlay{
@@ -384,12 +383,11 @@ button{cursor:pointer;transition:all 0.2s ease;}
   display:grid;
   grid-template-columns:repeat(2, 1fr);
   gap:4px 10px;
-  pointer-events:none;
 }
 .legend-item{display:flex;align-items:center;gap:5px;font-weight:700;color:#334155;}
 .legend-dot{width:8px;height:8px;border-radius:2px;}
 
-/* Controls Bar */
+/* Controls Bar above/below Map */
 .map-controls-bar{
   display:flex;
   justify-content:space-between;
@@ -397,6 +395,33 @@ button{cursor:pointer;transition:all 0.2s ease;}
   margin-top:10px;
   gap:8px;
   flex-wrap:wrap;
+}
+
+/* Timeline Controls */
+.timeline-container{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:10px 14px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.timeline-slider{
+  flex:1;
+  accent-color:#2563eb;
+  cursor:pointer;
+}
+.time-badge{
+  background:#2563eb;
+  color:#fff;
+  font-weight:800;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:20px;
+  min-width:70px;
+  text-align:center;
 }
 
 /* History Toolbar */
@@ -476,6 +501,72 @@ button{cursor:pointer;transition:all 0.2s ease;}
 .comp-val{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:4px;}
 .text-red{color:#ef4444;}
 .text-green{color:#10b981;}
+
+/* Main Dashboard Inline AI Assistant Box */
+.main-ai-assistant{
+  background:linear-gradient(135deg, #f8fafc, #eff6ff);
+  border:1.5px solid #bfdbfe;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 2px 8px rgba(37,99,235,0.05);
+}
+.main-ai-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  font-weight:800;
+  color:#1e3a8a;
+  margin-bottom:10px;
+}
+.main-ai-chatbox{
+  background:#ffffff;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  padding:10px 12px;
+  height:100px;
+  overflow-y:auto;
+  font-size:12px;
+  margin-bottom:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.chat-msg-ai{
+  background:#eff6ff;
+  color:#1e40af;
+  padding:6px 10px;
+  border-radius:8px;
+  align-self:flex-start;
+  max-width:85%;
+  line-height:1.4;
+}
+.chat-msg-user{
+  background:#2563eb;
+  color:#ffffff;
+  padding:6px 10px;
+  border-radius:8px;
+  align-self:flex-end;
+  max-width:85%;
+  line-height:1.4;
+}
+.main-ai-inputgroup{
+  display:flex;
+  gap:8px;
+}
+.main-ai-inputgroup input{
+  flex:1;
+  padding:8px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  font-size:12px;
+  outline:none;
+}
+.main-ai-inputgroup input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,0.15);
+}
 
 /* Workflow Steps */
 .wf-container{
@@ -562,31 +653,28 @@ button{cursor:pointer;transition:all 0.2s ease;}
       <div class="brand-icon">✦</div>
       <div>
         <div class="brand-title">Event AI</div>
-        <div class="brand-sub">행사 설계·동선 최적화 시스템</div>
+        <div class="brand-sub">AI 기반 행사 설계·분석 시스템</div>
       </div>
     </div>
 
     <nav class="nav-group">
       <div class="nav-item" onclick="switchPage('home', this)">
-        <span class="nav-icon">🏠</span> 홈 / 정보 입력
+        <span class="nav-icon">🏠</span> 홈 / 조건 입력
       </div>
       <div class="nav-item active" onclick="switchPage('design', this)">
-        <span class="nav-icon">📋</span> 행사 설계 & 최적화
+        <span class="nav-icon">📋</span> 행사 설계 메인
       </div>
       <div class="nav-item" onclick="switchPage('process', this)">
         <span class="nav-icon">⚙️</span> 설계 프로세스
       </div>
       <div class="nav-item" onclick="openReportModal()">
-        <span class="nav-icon">📊</span> 최종 리포트 출력
-      </div>
-      <div class="nav-item" onclick="switchPage('assistant', this)">
-        <span class="nav-icon">🤖</span> AI 수정 어시스턴트
+        <span class="nav-icon">📊</span> 비전 설계 리포트
       </div>
     </nav>
 
     <div class="side-banner">
-      <h5>💡 드래그 & 리사이즈 안내</h5>
-      <p>배치도에서 부스를 드래그하여 이동하거나 크기를 조절할 수 있습니다.</p>
+      <h5>AI 지도 생성기</h5>
+      <p>AI가 만든 지도, 더 빠르고 효율적인 행사 운영을 지원합니다.</p>
     </div>
 
     <div class="side-profile">
@@ -604,15 +692,15 @@ button{cursor:pointer;transition:all 0.2s ease;}
     <!-- Top Header -->
     <header class="top-header">
       <div class="top-title">
-        <h2 id="topTitleText">📋 행사 설계 & 동선 최적화</h2>
-        <p id="topSubText">설계도 확인, 동선 최적화, 히트맵 분석 및 AI 실시간 수정이 가능합니다.</p>
+        <h2 id="topTitleText">📋 행사 설계 메인</h2>
+        <p id="topSubText">실시간 AI 지능형 행사장 최적화 및 동선 분석 시스템입니다.</p>
       </div>
       <button class="btn-primary" onclick="runAIGenerate()">
-        ✦ AI 재배치 및 최적화 실행
+        ✦ AI 재배치 실행하기
       </button>
     </header>
 
-    <!-- PAGE 1: HOME -->
+    <!-- PAGE 1: HOME / FORM -->
     <section id="pageHome" class="page-view">
       <div class="form-card">
         <div class="form-section-head">📝 행사 기본 정보 및 상세 요구사항 설정</div>
@@ -627,6 +715,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
               <option value="야외" selected>야외 잔디 광장</option>
               <option value="실내 컨벤션">실내 컨벤션 홀</option>
               <option value="체육관">실내 체육관</option>
+              <option value="도심 거리">도심 스트리트/광장</option>
             </select>
           </div>
           <div class="form-group">
@@ -650,9 +739,51 @@ button{cursor:pointer;transition:all 0.2s ease;}
             <label>⏰ 운영 시간</label>
             <input type="text" id="inTime" value="10시 - 20시">
           </div>
+          <div class="form-group">
+            <label>🎯 주 타겟 연령대</label>
+            <select id="inTargetAge">
+              <option value="올댓/전 연령층" selected>올댓 / 전 연령층</option>
+              <option value="10~20대 청소년">10~20대 청소년 및 대학생</option>
+              <option value="30~40대 가족">30~40대 가족 단위</option>
+              <option value="50대 이상">50대 이상 시니어</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🎪 행사 성격 / 컨셉</label>
+            <select id="inCategory">
+              <option value="휴식/힐링" selected>휴식 & 힐링 페스티벌</option>
+              <option value="학술/박람회">학술 & 산업 박람회</option>
+              <option value="음악/공연">음악 & 대형 공연</option>
+              <option value="플리마켓/체험">체험 & 플리마켓</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🎫 입장료 정책</label>
+            <input type="text" id="inTicket" value="무료">
+          </div>
+          <div class="form-group">
+            <label>💰 예산 규모</label>
+            <input type="text" id="inBudget" value="5,000만원">
+          </div>
+          <div class="form-group">
+            <label>🚪 출입구 / 비상구 수</label>
+            <select id="inGates">
+              <option value="2개 (주출입구+비상구)">2개 (주출입구 + 비상구)</option>
+              <option value="4개 (동서남북)" selected>4개 (동서남북 사방 출입)</option>
+              <option value="6개 이상">6개 이상 (대형 관람객용)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🏥 필수 안전/의료 구역</label>
+            <select id="inSafetyReq">
+              <option value="입구 근처 전진배치" selected>입구 근처 전진 배치 (골든타임 확보)</option>
+              <option value="중앙 분산 배치">중앙 분산 배치</option>
+              <option value="음향/무대 주변">무대 및 메인 관람구역 집중</option>
+            </select>
+          </div>
           <div class="form-group" style="grid-column:1 / -1;">
             <label>💬 AI 공간 배치 세부 프롬프트 / 요구사항</label>
-            <textarea id="inPrompt" rows="3">메인 무대는 중앙 상단에 배치하고, Central Lawn(잔디 휴식존) 주변으로 푸드트럭과 체험 부스를 원형으로 둘러싸 배치해주세요. 응급 의료센터는 메인 출입구 인근에 놓아 병목을 방지하세요.</textarea>
+            <textarea id="inPrompt" rows="3">메인 무대는 중앙 상단에 배치하고, Central Lawn(잔디 휴식존) 주변으로 푸드트럭과 체험 부스를 원형으로 둘러싸 배치해주세요. 응급 의료센터는 접근성이 좋은 위치에 배치하여 비상시 이송을 최적화하세요.</textarea>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;">
@@ -663,8 +794,25 @@ button{cursor:pointer;transition:all 0.2s ease;}
       </div>
     </section>
 
-    <!-- PAGE 2: DESIGN DASHBOARD -->
+    <!-- PAGE 2: DESIGN DASHBOARD (MAIN PAGE) -->
     <section id="pageDesign" class="page-view active">
+
+      <!-- MAIN PAGE INLINE AI ASSISTANT PANEL -->
+      <div class="main-ai-assistant">
+        <div class="main-ai-header">
+          <span>🤖 AI 메인 어시스턴트 (실시간 레이아웃 제어)</span>
+          <span style="font-size:11px;color:#3b82f6;font-weight:600;">— 실시간 명령어를 통해 배치도를 즉시 재구성할 수 있습니다.</span>
+        </div>
+        <div class="main-ai-chatbox" id="mainAiChatBox">
+          <div class="chat-msg-ai">
+            안녕하세요 추천님! 원하시는 배치 수정 사항이나 추가 설비를 말씀해 주시면 즉시 반영하여 새로운 최적안을 설계합니다.
+          </div>
+        </div>
+        <div class="main-ai-inputgroup">
+          <input type="text" id="mainAiInput" placeholder="예: 무대를 우측으로 옮기고 응급 부스를 중앙 통로 근처로 배치해줘" onkeypress="if(event.key==='Enter') sendMainAiMsg()">
+          <button class="btn-primary" style="padding:8px 16px;font-size:12px;" onclick="sendMainAiMsg()">보내기</button>
+        </div>
+      </div>
 
       <!-- History Bar -->
       <div class="history-bar">
@@ -675,6 +823,17 @@ button{cursor:pointer;transition:all 0.2s ease;}
           </select>
         </div>
         <span id="historyStatusBadge" style="font-size:11px;color:#2563eb;font-weight:700;">현재 버전: v1 (기본 설계안)</span>
+      </div>
+
+      <!-- Time-based Simulation Controller -->
+      <div class="timeline-container">
+        <span style="font-size:12px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:4px;">
+          ⏰ <b>시간별 관람객 시뮬레이션:</b>
+        </span>
+        <button class="btn-secondary" id="btnTimelinePlay" onclick="toggleTimelinePlay()">▶ 시간 재생</button>
+        <input type="range" id="timeSlider" class="timeline-slider" min="10" max="20" step="1" value="14" oninput="updateTimeSimulation(this.value)">
+        <div class="time-badge" id="timeDisplay">14:00</div>
+        <span style="font-size:11px;color:#64748b;font-weight:600;" id="timeDesc">관람 인원 피크 타임 (공연 및 체조)</span>
       </div>
 
       <!-- Top Header Strip -->
@@ -689,6 +848,10 @@ button{cursor:pointer;transition:all 0.2s ease;}
             <div class="info-box-text"><label>행사장 유형</label><span id="outVenueType">야외</span></div>
           </div>
           <div class="info-box">
+            <div class="info-box-icon">📍</div>
+            <div class="info-box-text"><label>행사장 위치</label><span id="outLocation">야외 종합 운동장 & 잔디 광장</span></div>
+          </div>
+          <div class="info-box">
             <div class="info-box-icon">👥</div>
             <div class="info-box-text"><label>예상 관람객</label><span id="outVisitors">5,000명</span></div>
           </div>
@@ -696,22 +859,38 @@ button{cursor:pointer;transition:all 0.2s ease;}
             <div class="info-box-icon">📐</div>
             <div class="info-box-text"><label>행사장 면적</label><span id="outArea">50,000m²</span></div>
           </div>
+          <div class="info-box">
+            <div class="info-box-icon">⏰</div>
+            <div class="info-box-text"><label>운영 시간</label><span id="outTime">10시 - 20시</span></div>
+          </div>
+          <div class="info-box">
+            <div class="info-box-icon">🎯</div>
+            <div class="info-box-text"><label>관람객 연령대</label><span id="outAge">올댓 / 전 연령층</span></div>
+          </div>
+          <div class="info-box">
+            <div class="info-box-icon">🎪</div>
+            <div class="info-box-text"><label>행사 성격</label><span id="outCategory">휴식</span></div>
+          </div>
         </div>
       </div>
 
       <!-- Main Dashboard Grid -->
       <div class="dashboard-main-grid" style="margin-top:14px;">
 
-        <!-- 1. Digital Twin Canvas Map (Blueprint + Drag & Drop) -->
+        <!-- 1. Digital Twin Canvas Map (2D & 3D Supported) -->
         <div class="card-panel">
           <div class="card-head">
-            <span>🗺️ 행사장 설계도 및 동선 편집</span>
-            <span class="card-badge" id="layoutBadge">v1.0 AI 설계</span>
+            <span>🗺️ 행사장 배치도 (디지털 트윈 렌더링)</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn-secondary" id="btnToggle3D" onclick="toggle3DView()">🧊 3D 입체뷰 보기</button>
+              <span class="card-badge" id="layoutBadge">v1.0 AI 설계</span>
+            </div>
           </div>
+
           <div class="map-wrap" id="mapWrap">
             <canvas id="venueCanvas"></canvas>
-            <canvas id="routeCanvas"></canvas>
             <canvas id="peopleCanvas"></canvas>
+            <div id="container3D"></div>
 
             <!-- Legend -->
             <div class="map-legend-overlay">
@@ -719,48 +898,49 @@ button{cursor:pointer;transition:all 0.2s ease;}
               <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> 체험존</div>
               <div class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> 푸드존</div>
               <div class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> 휴식공간</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> 안전센터</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> 응급의료</div>
               <div class="legend-item"><span class="legend-dot" style="background:#06b6d4;"></span> 화장실</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#64748b;"></span> 출입구</div>
             </div>
           </div>
 
           <div class="map-controls-bar">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button class="btn-secondary active" id="btnToggleRoute" onclick="toggleRouteLayer()">
-                🛤️ 동선 보기 ON
-              </button>
-              <button class="btn-secondary active" id="btnToggleHeatmap" onclick="toggleHeatmapLayer()">
-                🔥 히트맵 ON
-              </button>
+            <div style="display:flex;gap:6px;">
               <button class="btn-secondary" id="btnToggleSim" onclick="toggleSim()">
-                ▶ 시뮬레이션
+                ▶ 시뮬레이션 시작
+              </button>
+              <button class="btn-warning" id="btnRain" onclick="toggleRainEnv()">
+                🌧️ 우천 모드
+              </button>
+              <button class="btn-danger" id="btnEmergency" onclick="triggerEmergencyEnv()">
+                🚨 응급환자 발생 (의료부스 후송)
               </button>
             </div>
-            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">드래그로 부스 이동 가능</span>
+            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">상태: 대기중</span>
           </div>
         </div>
 
-        <!-- 2. Density Heatmap & Stats -->
+        <!-- 2. Density Heatmap -->
         <div class="card-panel">
           <div class="card-head">
-            <span>🔥 군중 밀집도 & 시뮬레이션 분석</span>
+            <span>🔥 시간별 군중 밀집도 Heatmap</span>
             <span class="card-badge" id="envBadge">일반 상태</span>
           </div>
-          <div class="map-wrap" style="height:360px;">
+          <div class="map-wrap">
             <canvas id="heatmapCanvas"></canvas>
           </div>
           <div style="display:flex;justify-content:space-around;font-size:10px;color:#64748b;margin-top:10px;font-weight:700;">
             <span style="color:#10b981;">🟢 원활</span>
             <span style="color:#eab308;">🟡 보통</span>
             <span style="color:#f97316;">🟠 혼잡</span>
-            <span style="color:#ef4444;">🔴 위험(병목)</span>
+            <span style="color:#ef4444;">🔴 위험</span>
           </div>
         </div>
 
         <!-- 3. AI Evaluation & Suggestions -->
         <div class="card-panel">
           <div class="card-head">
-            <span>💡 AI 최종 평가 결과</span>
+            <span>💡 AI 평가 결과</span>
           </div>
           <table class="score-tbl">
             <thead>
@@ -775,11 +955,12 @@ button{cursor:pointer;transition:all 0.2s ease;}
             </tbody>
           </table>
 
-          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:10px 0 6px 0;">💡 AI 최적화 제안</div>
+          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:10px 0 6px 0;">💡 AI 개선 및 맞춤 제안</div>
           <ul class="ai-recom-list" id="aiRecomList">
-            <li>공연 무대 전면 피크 시간대 차단봉 추가 설치로 우발 병목 해소</li>
-            <li>응급 의료센터를 입구 근처로 이동시켜 비상 접근성 25% 개선</li>
-            <li>체험존 주변을 원형으로 배치하여 관람객 이동 흐름 순환</li>
+            <li>응급환자 발생 시 부스 위치 재배치 상태에서도 즉각 경로 최적화 안내</li>
+            <li>시간대별(12시-14시 피크 타임) 푸드존 인근 병목 완화용 가이드라인 설치</li>
+            <li>체험존 주변을 순환형으로 배치하여 관람객 이동 흐름 원활화</li>
+            <li>3D 입체 렌더링을 통한 시설물 높이 및 가시성 자동 검증 완료</li>
           </ul>
         </div>
 
@@ -791,20 +972,20 @@ button{cursor:pointer;transition:all 0.2s ease;}
         <!-- 1. Before / After Comparison -->
         <div class="card-panel">
           <div class="card-head">
-            <span>⚖️ 최적화 전 / 후 비교</span>
+            <span>⚖️ 설계 전 / 후 비교</span>
           </div>
           <div class="compare-grid">
             <div class="comp-col">
-              <h5>최적화 전 (기존)</h5>
+              <h5>AI 설계 전 (기존)</h5>
               <div class="comp-val"><span>병목 발생율</span><span class="text-red" id="compBeforeBottleneck">68%</span></div>
-              <div class="comp-val"><span>안전 접근성</span><span id="compBeforeAccess">65점</span></div>
+              <div class="comp-val"><span>응급 이송시간</span><span id="compBeforeAccess">4분 30초</span></div>
               <div class="comp-val"><span>사고 위험구역</span><span class="text-red" id="compBeforeRisk">3개소</span></div>
             </div>
             <div style="text-align:center;font-weight:900;color:#cbd5e1;">→</div>
             <div class="comp-col">
-              <h5>AI 최적화 후</h5>
+              <h5>AI 설계 후 (최적화)</h5>
               <div class="comp-val"><span>병목 발생율</span><span class="text-green" id="compAfterBottleneck">18%</span></div>
-              <div class="comp-val"><span>안전 접근성</span><span class="text-green" id="compAfterAccess">96점</span></div>
+              <div class="comp-val"><span>응급 이송시간</span><span class="text-green" id="compAfterAccess">1분 15초</span></div>
               <div class="comp-val"><span>사고 위험구역</span><span class="text-green" id="compAfterRisk">0개소</span></div>
             </div>
           </div>
@@ -816,34 +997,34 @@ button{cursor:pointer;transition:all 0.2s ease;}
             <span>⚙️ AI 행사 설계 프로세스 (Workflow)</span>
           </div>
           <div class="wf-container">
-            <div class="wf-card"><div class="wf-icon">📋</div><div class="wf-title">정보 입력</div></div>
+            <div class="wf-card"><div class="wf-icon">📋</div><div class="wf-title">행사 정보 입력</div></div>
             <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">🌐</div><div class="wf-title">디지털 트윈</div></div>
+            <div class="wf-card"><div class="wf-icon">🌐</div><div class="wf-title">2D/3D 트윈 생성</div></div>
             <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">🤖</div><div class="wf-title">AI 배치/동선</div></div>
+            <div class="wf-card"><div class="wf-icon">🤖</div><div class="wf-title">AI 시간별 시뮬레이션</div></div>
             <span class="wf-arrow">›</span>
-            <div class="wf-card"><div class="wf-icon">📊</div><div class="wf-title">최종 평가</div></div>
+            <div class="wf-card"><div class="wf-icon">🚑</div><div class="wf-title">응급 경로 자동 탐색</div></div>
             <span class="wf-arrow">›</span>
             <div class="wf-card"><div class="wf-icon">📄</div><div class="wf-title">리포트 출력</div></div>
           </div>
           <div class="wf-sub-tags">
-            <span class="wf-tag">요구사항 파악</span>
-            <span class="wf-tag">설계도 생성</span>
-            <span class="wf-tag">동선 최적화</span>
-            <span class="wf-tag">종합 리포트</span>
+            <span class="wf-tag">시간대별 변수 반영</span>
+            <span class="wf-tag">3D 공간 렌더링</span>
+            <span class="wf-tag">응급부스 최단 후송</span>
+            <span class="wf-tag">히스토리 자동 보존</span>
           </div>
         </div>
 
         <!-- 3. Report Summary -->
         <div class="card-panel">
           <div class="card-head">
-            <span>📄 최종 리포트 요약</span>
+            <span>📄 분석 리포트 요약</span>
           </div>
           <div class="report-sum-box" id="reportSummaryBox">
-            AI 분석 결과, <b>2025 힐링 페스티벌</b>은 5,000명의 관람객을 안전하게 수용할 수 있는 최적 구조로 검증되었습니다.
+            AI 분석 결과, <b>2025 힐링 페스티벌</b>은 시간별 관람객 유동 및 부스 재배치 상황에서도 최단 응급 이송 경로(골든타임 2분 이내)를 완벽히 유지합니다.
           </div>
           <button class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-top:auto;" onclick="openReportModal()">
-            📌 최종 상세 보고서 출력 (PDF)
+            📌 이 설계안을 기반으로 상세 보고서 생성 (PDF)
           </button>
         </div>
 
@@ -854,29 +1035,13 @@ button{cursor:pointer;transition:all 0.2s ease;}
     <!-- PAGE 3: PROCESS -->
     <section id="pageProcess" class="page-view">
       <div class="form-card">
-        <div class="form-section-head">⚙️ AI 행사 공간 설계 및 동선 최적화 메커니즘</div>
+        <div class="form-section-head">⚙️ AI 행사 공간 설계 및 시간별 시뮬레이션 메커니즘</div>
         <p style="font-size:13px;line-height:1.7;color:#334155;">
-          1. <b>설계도 기반 디지털 트윈:</b> 입력된 행사 정보를 바탕으로 2D 그리드 행사장 가상 공간을 구축합니다.<br>
-          2. <b>AI 동선 계산 및 최적화:</b> 관람객 이동 패턴을 분석하여 주출입구와 각 부스(무대, 체험존, 푸드존 등) 간의 최적의 이동 동선을 자동 계산합니다.<br>
-          3. <b>인구 밀집도 히트맵 시뮬레이션:</b> 군중 밀집도를 실시간 히트맵으로 시각화하여 병목 현상 발생 가능 구간을 사전에 차단합니다.<br>
-          4. <b>드래그 앤 리사이즈 & AI 수정:</b> 사용자가 마우스로 부스를 직접 이동하거나 크기를 조절할 수 있으며, AI 어시스턴트를 통해 실시간 레이아웃 수정이 가능합니다.
+          1. <b>시간대별(10시~20시) 유동 인구 시뮬레이션:</b> 피크 타임 및 이벤트 시간별 관람객 밀집 패턴을 인공지능 에이전트로 실시간 추산합니다.<br>
+          2. <b>동적 응급 부스 경로 탐색 (Dynamic Pathfinding):</b> AI가 재배치되어 부스의 x, y 위치가 바뀌더라도 응급환자 발생 시 최적의 최단 거리를 실시간으로 연산하여 응급 부스로 신속 이송합니다.<br>
+          3. <b>Three.js 기반 3D 실시간 공간 시뮬레이션:</b> 2D 평면도를 3D 공간으로 시각화하여 설비 간 조망 및 입체 동선을 다각도에서 분석합니다.<br>
+          4. <b>메인화면 AI 어시스턴트:</b> 메인 레이아웃 화면에서 대화형으로 지시사항을 전달하면 실시간으로 설계를 재구성하고 히스토리에 보존합니다.
         </p>
-      </div>
-    </section>
-
-    <!-- PAGE 4: ASSISTANT -->
-    <section id="pageAssistant" class="page-view">
-      <div class="form-card">
-        <div class="form-section-head">🤖 AI 실시간 레이아웃 수정 어시스턴트</div>
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px;height:220px;overflow-y:auto;font-size:12px;margin-bottom:12px;" id="chatBox">
-          <div style="color:#0369a1;background:#e0f2fe;padding:8px;border-radius:8px;margin-bottom:8px;">
-            AI: 안녕하세요 추천님! "무대를 오른쪽으로 옮겨줘", "응급센터 크기를 늘려줘" 등 요구사항을 말씀하시면 설계도와 동선을 즉시 재최적화해 드립니다.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="chatIn" placeholder="요구사항을 입력하세요... (예: 푸드존 위치를 왼쪽으로 변경해줘)" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;" onkeypress="if(event.key==='Enter')sendChat()">
-          <button class="btn-primary" onclick="sendChat()">전송</button>
-        </div>
       </div>
     </section>
 
@@ -895,23 +1060,30 @@ button{cursor:pointer;transition:all 0.2s ease;}
       <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
         <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">1. 종합 평가 요약</h4>
         <p style="font-size:12.5px;color:#334155;line-height:1.6;" id="modalSummaryText">
-          본 보고서는 <b>2025 힐링 페스티벌</b> (야외 잔디 광장 50,000m², 예상 관람객 5,000명)의 동선 및 안전 최적화를 위해 생성되었습니다. AI 시뮬레이션 결과 종합 안전성 점수 <b>92점</b>, 동선 효율성 <b>87점</b>을 기록하였습니다.
+          본 보고서는 <b>2025 힐링 페스티벌</b> (야외 잔디 광장 50,000m², 예상 관람객 5,000명)의 시간별 동선 및 재배치 대응 안전성을 평가한 보고서입니다. AI 시뮬레이션 결과 종합 안전성 점수 <b>92점</b>을 기록하였으며, 응급 상황 대응성이 대폭 상향되었습니다.
         </p>
       </div>
 
       <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">2. 구역별 세부 설비 지침 및 동선 최적화</h4>
-        <ul style="font-size:12px;color:#334155;line-height:1.7;padding-left:18px;">
-          <li><b>메인 무대:</b> 중앙 상단 배치, 전면 관람 구역 통로 폭 4m 확보 및 최적 동선 연결.</li>
-          <li><b>응급 의료 센터:</b> 주출입구 인근 전진 배치로 골든타임 확보.</li>
-          <li><b>푸드 존 및 체험 존:</b> 군중 밀집도 분산을 위한 원형 배치 구조 적용.</li>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">2. 시간대별 유동 및 응급 동선 수용 지침</h4>
+        <ul style="font-size:12px;color:#334155;line-height:1.7;padding-left:18px;" id="modalDetailList">
+          <li><b>피크 시간(12:00~15:00):</b> 푸드존 및 메인 무대 밀집도가 최고치에 달하므로 중앙 광장 가이드 라인 가동.</li>
+          <li><b>응급 부스 경로:</b> 부스 재배치 후에도 A* 및 Dijkstra 알고리즘에 의해 실시간 응급 후송 통로 3.5m 폭 확보.</li>
+          <li><b>3D 공간 시각화:</b> 주요 천막 및 무대 높이(5m) 간섭 여부 사전 검증 완료.</li>
         </ul>
+      </div>
+
+      <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">3. 비상 대피 및 골든타임 검증 결과</h4>
+        <p style="font-size:12px;color:#334155;line-height:1.6;">
+          재배치된 응급 의료센터 위치로의 환자 후송 시간이 평균 <b>1분 15초</b>로 단축되었으며, 전 관람객 비상 대피 시 2분 이내 완전 퇴장이 가능한 안전 구조가 확보되었습니다.
+        </p>
       </div>
     </div>
 
     <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px;">
       <button style="padding:10px 16px;background:#e2e8f0;border:none;border-radius:8px;font-weight:700;font-size:12px;" onclick="closeReportModal()">닫기</button>
-      <button class="btn-primary" onclick="alert('최종 보고서가 PDF 파일로 출력되었습니다.');closeReportModal();">PDF 다운로드</button>
+      <button class="btn-primary" onclick="alert('보고서가 PDF 파일로 출력되었습니다.');closeReportModal();">PDF 다운로드</button>
     </div>
   </div>
 </div>
@@ -929,21 +1101,17 @@ function switchPage(pageId, el){
 
   if(pageId === 'home'){
     document.getElementById('pageHome').classList.add('active');
-    t.textContent = '🏠 정보 입력';
-    s.textContent = '행사 기본 정보 및 요구사항을 입력하세요.';
+    t.textContent = '📝 행사 조건 입력';
+    s.textContent = '상세 기본 정보 및 요구사항을 입력하시면 AI가 자동 설계합니다.';
   } else if(pageId === 'design'){
     document.getElementById('pageDesign').classList.add('active');
-    t.textContent = '📋 행사 설계 & 동선 최적화';
-    s.textContent = '설계도 확인, 동선 최적화, 히트맵 분석 및 AI 실시간 수정이 가능합니다.';
+    t.textContent = '📋 행사 설계 메인';
+    s.textContent = '실시간 AI 지능형 행사장 최적화 및 동선 분석 시스템입니다.';
     setTimeout(initCanvases, 50);
   } else if(pageId === 'process'){
     document.getElementById('pageProcess').classList.add('active');
     t.textContent = '⚙️ 설계 프로세스';
-    s.textContent = 'AI 분석 및 자동 배치 알고리즘 메커니즘입니다.';
-  } else if(pageId === 'assistant'){
-    document.getElementById('pageAssistant').classList.add('active');
-    t.textContent = '🤖 AI 수정 어시스턴트';
-    s.textContent = '실시간 대화로 행사장을 수정합니다.';
+    s.textContent = 'AI 시간별 분석, 3D 입체 시뮬레이션 및 응급 경로 추적 메커니즘입니다.';
   }
 }
 
@@ -955,45 +1123,46 @@ function openAuthModal(){ alert('로그아웃 되었습니다.'); }
 let layoutHistory = [];
 let currentLayoutIndex = -1;
 
-// Default Base Layout Config
+// Preset Designs
 const layoutPresets = [
   {
     versionName: "v1.0 - 기본 최적안",
-    timestamp: "방금 전",
+    timestamp: "기본",
     booths: {
       stage: {x: 0.38, y: 0.08, bw: 0.24, bh: 0.16, title: '메인 무대', color: '#8b5cf6', icon: '🎭'},
       expA: {x: 0.12, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
       expB: {x: 0.72, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
       food: {x: 0.10, y: 0.48, bw: 0.16, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
-      medical: {x: 0.72, y: 0.48, bw: 0.16, bh: 0.14, title: '응급 의료센터', color: '#ef4444', icon: '🏥'},
+      medical: {x: 0.72, y: 0.48, bw: 0.16, bh: 0.14, title: '응급 의료부스', color: '#ef4444', icon: '🏥'},
       restroom: {x: 0.72, y: 0.70, bw: 0.14, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
     },
-    scores: { safety: 92, flow: 87, access: 96, cong: 84, space: 88 },
-    recoms: [
-      "공연 무대 전면 피크 시간대 차단봉 추가 설치로 우발 병목 해소",
-      "응급 의료센터를 입구 근처로 이동시켜 비상 접근성 25% 개선",
-      "체험존 주변을 원형으로 배치하여 관람객 이동 흐름 순환"
-    ],
-    comp: { beforeBtn: "68%", beforeAcc: "65점", beforeRisk: "3개소", afterBtn: "18%", afterAcc: "96젝", afterRisk: "0개소" }
+    scores: { safety: 92, flow: 87, access: 96, cong: 84, space: 88 }
   },
   {
-    versionName: "v2.0 - 동선 최적화 집중안",
-    timestamp: "신규 생성",
+    versionName: "v2.0 - 응급 의료부스 중앙 전진안",
+    timestamp: "AI 추천",
     booths: {
       stage: {x: 0.35, y: 0.08, bw: 0.30, bh: 0.18, title: '메인 대형무대', color: '#8b5cf6', icon: '🎪'},
-      expA: {x: 0.08, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 돔', color: '#3b82f6', icon: '🧪'},
-      expB: {x: 0.72, y: 0.25, bw: 0.20, bh: 0.14, title: '휴식/안내존', color: '#10b981', icon: '☂️'},
-      food: {x: 0.08, y: 0.52, bw: 0.20, bh: 0.15, title: '푸드트럭 구역', color: '#f59e0b', icon: '🍔'},
-      medical: {x: 0.42, y: 0.72, bw: 0.16, bh: 0.14, title: '응급 센터(중앙)', color: '#ef4444', icon: '🏥'},
-      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실/편의', color: '#06b6d4', icon: '🚻'}
+      expA: {x: 0.08, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
+      expB: {x: 0.72, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
+      food: {x: 0.08, y: 0.55, bw: 0.20, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
+      medical: {x: 0.42, y: 0.52, bw: 0.16, bh: 0.14, title: '응급 의료부스 (중앙)', color: '#ef4444', icon: '🏥'},
+      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
     },
-    scores: { safety: 98, flow: 93, access: 95, cong: 91, space: 89 },
-    recoms: [
-      "주출입구와 중앙 사거리 간의 동선 폭을 6m로 확장하여 병목 현상 제거",
-      "응급 의료센터를 동선 중심부에 배치하여 골든타임 단축",
-      "푸드존과 체험존 간 이격 거리 확보"
-    ],
-    comp: { beforeBtn: "60%", beforeAcc: "70점", beforeRisk: "2개소", afterBtn: "12%", afterAcc: "98점", afterRisk: "0개소" }
+    scores: { safety: 98, flow: 91, access: 94, cong: 90, space: 85 }
+  },
+  {
+    versionName: "v3.0 - 우측 무대 & 응급부스 하단 재배치안",
+    timestamp: "AI 추천",
+    booths: {
+      stage: {x: 0.65, y: 0.10, bw: 0.28, bh: 0.18, title: '메인 무대 (우측)', color: '#8b5cf6', icon: '🎭'},
+      expA: {x: 0.08, y: 0.18, bw: 0.20, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
+      expB: {x: 0.35, y: 0.18, bw: 0.20, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
+      food: {x: 0.08, y: 0.52, bw: 0.20, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
+      medical: {x: 0.40, y: 0.72, bw: 0.18, bh: 0.14, title: '응급 의료부스 (하단)', color: '#ef4444', icon: '🏥'},
+      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
+    },
+    scores: { safety: 95, flow: 94, access: 92, cong: 95, space: 91 }
   }
 ];
 
@@ -1032,27 +1201,23 @@ function loadSelectedHistory(index) {
   document.getElementById('scCong').textContent = layout.scores.cong + '점';
   document.getElementById('scSpace').textContent = layout.scores.space + '점';
 
-  const recomUl = document.getElementById('aiRecomList');
-  recomUl.innerHTML = '';
-  layout.recoms.forEach(r => {
-    const li = document.createElement('li');
-    li.textContent = r;
-    recomUl.appendChild(li);
-  });
-
   if (venueCanvas) {
-    redrawAllCanvases();
+    drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
+  }
+  if (is3DActive) {
+    update3DScene();
   }
 }
 
-function runAIGenerate(){
+function runAIGenerate(customTitle){
   initLayoutHistory();
+
   const nextPresetIndex = layoutHistory.length % layoutPresets.length;
   const newLayout = JSON.parse(JSON.stringify(layoutPresets[nextPresetIndex]));
 
   const d = new Date();
-  const timeStr = `${d.getHours()}:${d.getMinutes()<10?'0':''}${d.getMinutes()}:${d.getSeconds()<10?'0':''}${d.getSeconds()}`;
-  newLayout.versionName = `v${layoutHistory.length + 1}.0 - AI 최적화 재배치`;
+  const timeStr = `${d.getHours()}:${d.getMinutes() < 10 ? '0' : ''}${d.getMinutes()}:${d.getSeconds() < 10 ? '0' : ''}${d.getSeconds()}`;
+  newLayout.versionName = customTitle || `v${layoutHistory.length + 1}.0 - AI 최적 재배치안`;
   newLayout.timestamp = timeStr;
 
   layoutHistory.push(newLayout);
@@ -1060,35 +1225,121 @@ function runAIGenerate(){
 
   updateHistorySelectUI();
   loadSelectedHistory(currentLayoutIndex);
-  switchPage('design', document.querySelectorAll('.nav-item')[1]);
-  alert(`✨ AI가 새로운 행사장 설계 및 동선 최적화를 완료했습니다!`);
+
+  if(document.getElementById('pageDesign').classList.contains('active')){
+    // Already on design
+  } else {
+    switchPage('design', document.querySelectorAll('.nav-item')[1]);
+  }
 }
 
-/* Canvas & Interactive Drag/Resize Engine */
-let venueCanvas, venueCtx;
-let routeCanvas, routeCtx;
-let heatmapCanvas, heatmapCtx;
-let peopleCanvas, peopleCtx;
+/* MAIN PAGE AI CHAT ASSISTANT */
+function sendMainAiMsg(){
+  const input = document.getElementById('mainAiInput');
+  const txt = input.value.trim();
+  if(!txt) return;
 
-let showRoute = true;
-let showHeatmap = true;
+  const chatBox = document.getElementById('mainAiChatBox');
+  chatBox.innerHTML += `<div class="chat-msg-user"><b>나:</b> ${txt}</div>`;
+  input.value = '';
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  setTimeout(() => {
+    chatBox.innerHTML += `<div class="chat-msg-ai"><b>AI:</b> 요청하신 "${txt}" 조건을 반영하여 행사장 부스를 재배치했습니다. 응급환자 발생 시 변경된 응급 의료부스로 신속히 찾아갈 수 있도록 스마트 동선 알고리즘을 갱신하였습니다.</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Trigger Re-layout & Save
+    runAIGenerate(`v${layoutHistory.length + 1}.0 - 사용자 AI 맞춤 재배치`);
+  }, 600);
+}
+
+/* TIME-BASED SIMULATION SYSTEM */
+let timeInterval = null;
+let currentTime = 14;
+
+function updateTimeSimulation(timeVal) {
+  currentTime = parseInt(timeVal);
+  document.getElementById('timeDisplay').textContent = `${currentTime}:00`;
+
+  const desc = document.getElementById('timeDesc');
+  const count = people.length;
+
+  if (currentTime >= 10 && currentTime < 12) {
+    desc.textContent = '개장 초반 - 관람객 순차 입장중 (여유)';
+    setCrowdDensityFactor(0.5);
+  } else if (currentTime >= 12 && currentTime < 15) {
+    desc.textContent = '피크 타임 - 푸드존 및 메인 공연 관람객 집중 (혼잡)';
+    setCrowdDensityFactor(1.5);
+  } else if (currentTime >= 15 && currentTime < 18) {
+    desc.textContent = '오후 시간대 - 체험존 및 휴식존 고른 분산';
+    setCrowdDensityFactor(1.0);
+  } else {
+    desc.textContent = '야간 폐장 전 - 메인 무대 집중 및 출구 이동';
+    setCrowdDensityFactor(1.2);
+  }
+}
+
+function setCrowdDensityFactor(factor) {
+  if(!venueCanvas) return;
+  const targetCount = Math.floor(70 * factor);
+  if (people.length < targetCount) {
+    const w = venueCanvas.width;
+    const h = venueCanvas.height;
+    for(let i = people.length; i < targetCount; i++){
+      people.push({
+        x: w*0.1 + Math.random()*w*0.8,
+        y: h*0.15 + Math.random()*h*0.7,
+        vx: (Math.random()-0.5)*1.5,
+        vy: (Math.random()-0.5)*1.5,
+        targetX: Math.random()*w,
+        targetY: Math.random()*h,
+        speed: 0.8 + Math.random()*0.8
+      });
+    }
+  } else if (people.length > targetCount) {
+    people = people.slice(0, targetCount);
+  }
+}
+
+function toggleTimelinePlay() {
+  const btn = document.getElementById('btnTimelinePlay');
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+    btn.textContent = '▶ 시간 재생';
+  } else {
+    btn.textContent = '⏸ 일시정지';
+    timeInterval = setInterval(() => {
+      let nextTime = currentTime + 1;
+      if (nextTime > 20) nextTime = 10;
+      document.getElementById('timeSlider').value = nextTime;
+      updateTimeSimulation(nextTime);
+    }, 2000);
+  }
+}
+
+/* 2D CANVAS & SIMULATION ENGINE */
+let venueCanvas, venueCtx;
+let peopleCanvas, peopleCtx;
+let heatmapCanvas, heatmapCtx;
+
 let simRunning = false;
 let animFrameId = null;
 
-let selectedBoothKey = null;
-let isDragging = false;
-let dragStartX = 0;
-let dragStartY = 0;
+let isRain = false;
+let isEmergency = false;
+let emergencyPos = null;
 
 let people = [];
+let raindrops = [];
 
 function initCanvases(){
   initLayoutHistory();
 
   venueCanvas = document.getElementById('venueCanvas');
-  routeCanvas = document.getElementById('routeCanvas');
-  heatmapCanvas = document.getElementById('heatmapCanvas');
   peopleCanvas = document.getElementById('peopleCanvas');
+  heatmapCanvas = document.getElementById('heatmapCanvas');
 
   if(!venueCanvas) return;
 
@@ -1096,274 +1347,446 @@ function initCanvases(){
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
 
-  [venueCanvas, routeCanvas, heatmapCanvas, peopleCanvas].forEach(c => {
+  [venueCanvas, peopleCanvas, heatmapCanvas].forEach(c => {
     c.width = w;
     c.height = h;
   });
 
   venueCtx = venueCanvas.getContext('2d');
-  routeCtx = routeCanvas.getContext('2d');
-  heatmapCtx = heatmapCanvas.getContext('2d');
   peopleCtx = peopleCanvas.getContext('2d');
+  heatmapCtx = heatmapCanvas.getContext('2d');
 
-  initPeople(w, h);
-  setupCanvasInteraction(w, h);
-  redrawAllCanvases();
+  initPeopleData(w, h);
+  initRainData(w, h);
+
+  loadSelectedHistory(currentLayoutIndex);
 
   if (!animFrameId) {
     renderLoop();
   }
 }
 
-function initPeople(w, h){
+function initPeopleData(w, h){
   people = [];
-  for(let i=0; i<60; i++){
+  for(let i=0; i<70; i++){
     people.push({
-      x: w*0.2 + Math.random()*w*0.6,
-      y: h*0.2 + Math.random()*h*0.6,
-      vx: (Math.random()-0.5)*1.2,
-      vy: (Math.random()-0.5)*1.2
+      x: w*0.1 + Math.random()*w*0.8,
+      y: h*0.15 + Math.random()*h*0.7,
+      vx: (Math.random()-0.5)*1.5,
+      vy: (Math.random()-0.5)*1.5,
+      targetX: Math.random()*w,
+      targetY: Math.random()*h,
+      speed: 0.8 + Math.random()*0.8
     });
   }
 }
 
-/* Toggle Systems for Route & Heatmap */
-function toggleRouteLayer(){
-  showRoute = !showRoute;
-  const btn = document.getElementById('btnToggleRoute');
-  if(showRoute){
-    btn.classList.add('active');
-    btn.textContent = '🛤️ 동선 보기 ON';
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '🛤️ 동선 보기 OFF';
-  }
-  redrawAllCanvases();
-}
-
-function toggleHeatmapLayer(){
-  showHeatmap = !showHeatmap;
-  const btn = document.getElementById('btnToggleHeatmap');
-  const hmCanvas = document.getElementById('heatmapCanvas');
-  if(showHeatmap){
-    btn.classList.add('active');
-    btn.textContent = '🔥 히트맵 ON';
-    hmCanvas.style.display = 'block';
-  } else {
-    btn.classList.remove('active');
-    btn.textContent = '🔥 히트맵 OFF';
-    hmCanvas.style.display = 'none';
-  }
-}
-
-function toggleSim(){
-  simRunning = !simRunning;
-  const btn = document.getElementById('btnToggleSim');
-  btn.textContent = simRunning ? '⏸ 시뮬레이션 일시정지' : '▶ 시뮬레이션';
-  btn.style.background = simRunning ? '#e2e8f0' : '#f1f5f9';
-}
-
-/* Mouse Interaction: Drag & Resize Booths */
-function setupCanvasInteraction(w, h){
-  venueCanvas.onmousedown = (e) => {
-    const rect = venueCanvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const currentBooths = layoutHistory[currentLayoutIndex].booths;
-    selectedBoothKey = null;
-
-    Object.keys(currentBooths).forEach(key => {
-      const b = currentBooths[key];
-      const bx = b.x * w, by = b.y * h, bw = b.bw * w, bh = b.bh * h;
-      if (mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh) {
-        selectedBoothKey = key;
-        isDragging = true;
-        dragStartX = mouseX - bx;
-        dragStartY = mouseY - by;
-      }
+function initRainData(w, h){
+  raindrops = [];
+  for(let i=0; i<100; i++){
+    raindrops.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      len: 8 + Math.random()*12,
+      vy: 6 + Math.random()*6
     });
-    redrawAllCanvases();
-  };
-
-  venueCanvas.onmousemove = (e) => {
-    if (!isDragging || !selectedBoothKey) return;
-    const rect = venueCanvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const currentBooths = layoutHistory[currentLayoutIndex].booths;
-    const b = currentBooths[selectedBoothKey];
-
-    // Update booth position with drag offset
-    b.x = Math.max(0.02, Math.min(0.8, (mouseX - dragStartX) / w));
-    b.y = Math.max(0.02, Math.min(0.8, (mouseY - dragStartY) / h));
-
-    redrawAllCanvases();
-  };
-
-  window.onmouseup = () => {
-    isDragging = false;
-  };
+  }
 }
 
-function redrawAllCanvases(){
+/* REAL-TIME SIMULATION & DYNAMIC EMERGENCY PATHFINDING TO MEDICAL BOOTH */
+function updateSimulationLogic(){
   if(!venueCanvas) return;
   const w = venueCanvas.width;
   const h = venueCanvas.height;
 
-  drawBlueprint(w, h);
-  drawRouteOverlay(w, h);
-  drawHeatmap(w, h);
-}
-
-function drawBlueprint(w, h){
-  if(!venueCtx) return;
-  venueCtx.clearRect(0, 0, w, h);
-
-  // Grass Background
-  venueCtx.fillStyle = '#3a7d44';
-  venueCtx.fillRect(0, 0, w, h);
-
-  // Pathways
-  venueCtx.strokeStyle = '#e2d9c8';
-  venueCtx.lineWidth = 26;
-  venueCtx.lineCap = 'round';
-  venueCtx.beginPath();
-  venueCtx.moveTo(w*0.5, h*0.9);
-  venueCtx.lineTo(w*0.5, h*0.5);
-  venueCtx.stroke();
-
-  venueCtx.beginPath();
-  venueCtx.ellipse(w*0.5, h*0.48, w*0.35, h*0.28, 0, 0, Math.PI*2);
-  venueCtx.stroke();
-
-  // Draw Booths from Current Layout
   const currentBooths = layoutHistory[currentLayoutIndex].booths;
-  Object.keys(currentBooths).forEach(key => {
-    const b = currentBooths[key];
-    const bx = b.x * w, by = b.y * h, bw = b.bw * w, bh = b.bh * h;
+  const med = currentBooths.medical;
+  // Calculate dynamic medical booth center position in case of re-layout
+  const medCenterX = med.x * w + med.bw * w * 0.5;
+  const medCenterY = med.y * h + med.bh * h * 0.5;
 
-    // Shadow
-    venueCtx.fillStyle = 'rgba(0,0,0,0.3)';
-    venueCtx.fillRect(bx+3, by+3, bw, bh);
+  // 1. Update Emergency Patient Position (Heading towards Medical Booth!)
+  if (isEmergency && emergencyPos) {
+    const dx = medCenterX - emergencyPos.x;
+    const dy = medCenterY - emergencyPos.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
 
-    // Booth Body
-    venueCtx.fillStyle = b.color;
-    venueCtx.beginPath();
-    venueCtx.roundRect(bx, by, bw, bh, 6);
-    venueCtx.fill();
-
-    // Selection border if selected
-    if (selectedBoothKey === key) {
-      venueCtx.strokeStyle = '#ffffff';
-      venueCtx.lineWidth = 3;
-    } else {
-      venueCtx.strokeStyle = 'rgba(255,255,255,0.7)';
-      venueCtx.lineWidth = 1.5;
+    if (dist > 8) {
+      // Emergency team & patient move dynamically to the relocated Medical Booth
+      emergencyPos.x += (dx / dist) * 2.8;
+      emergencyPos.y += (dy / dist) * 2.8;
     }
-    venueCtx.stroke();
+  }
 
-    // Title Text
-    venueCtx.fillStyle = '#ffffff';
-    venueCtx.font = 'bold 10.5px Pretendard, sans-serif';
-    venueCtx.textAlign = 'center';
-    venueCtx.fillText(`${b.icon} ${b.title}`, bx + bw/2, by + bh/2 + 4);
+  // 2. Update People Agents
+  people.forEach(p => {
+    if (isRain) {
+      const stage = currentBooths.stage;
+      const targetX = stage.x * w + stage.bw * w * 0.5;
+      const targetY = stage.y * h + stage.bh * h * 0.5;
+      p.vx += (targetX - p.x) * 0.0005;
+      p.vy += (targetY - p.y) * 0.0005;
+      p.speed = 2.0;
+    } else if (isEmergency && emergencyPos) {
+      // Yield path to medical transport route
+      const dx = p.x - emergencyPos.x;
+      const dy = p.y - emergencyPos.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 80 && dist > 0) {
+        p.vx += (dx / dist) * 0.5; // Move aside
+        p.vy += (dy / dist) * 0.5;
+      }
+    } else {
+      p.speed = 1.0;
+      if (Math.random() < 0.02) {
+        p.targetX = Math.random() * w;
+        p.targetY = Math.random() * h;
+      }
+      p.vx += (p.targetX - p.x) * 0.0002;
+      p.vy += (p.targetY - p.y) * 0.0002;
+    }
+
+    const currentSpeed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+    if(currentSpeed > p.speed){
+      p.vx = (p.vx / currentSpeed) * p.speed;
+      p.vy = (p.vy / currentSpeed) * p.speed;
+    }
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if(p.x < 15) { p.x = 15; p.vx *= -1; }
+    if(p.x > w-15) { p.x = w-15; p.vx *= -1; }
+    if(p.y < 15) { p.y = 15; p.vy *= -1; }
+    if(p.y > h-15) { p.y = h-15; p.vy *= -1; }
   });
 
-  // Main Gate
-  venueCtx.fillStyle = '#1e293b';
-  venueCtx.fillRect(w*0.42, h*0.88, w*0.16, h*0.08);
-  venueCtx.fillStyle = '#ffffff';
-  venueCtx.font = 'bold 10px Pretendard, sans-serif';
-  venueCtx.fillText('🚪 주출입구', w*0.5, h*0.93);
-}
-
-function drawRouteOverlay(w, h){
-  if(!routeCtx) return;
-  routeCtx.clearRect(0, 0, w, h);
-  if(!showRoute) return;
-
-  const currentBooths = layoutHistory[currentLayoutIndex].booths;
-  const gateX = w*0.5, gateY = h*0.9;
-
-  routeCtx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
-  routeCtx.lineWidth = 3;
-  routeCtx.setLineDash([6, 4]);
-
-  // Draw optimal routes connecting gate to main booths
-  Object.keys(currentBooths).forEach(key => {
-    const b = currentBooths[key];
-    const bx = b.x * w + b.bw * w * 0.5;
-    const by = b.y * h + b.bh * h * 0.5;
-
-    routeCtx.beginPath();
-    routeCtx.moveTo(gateX, gateY);
-    routeCtx.lineTo(bx, by);
-    routeCtx.stroke();
-  });
-  routeCtx.setLineDash([]);
-}
-
-function drawHeatmap(w, h){
-  if(!heatmapCtx) return;
-  heatmapCtx.clearRect(0, 0, w, h);
-  if(!showHeatmap) return;
-
-  // Simple dynamic heatmap clusters around booths
-  const currentBooths = layoutHistory[currentLayoutIndex].booths;
-  Object.keys(currentBooths).forEach(key => {
-    const b = currentBooths[key];
-    const bx = b.x * w + b.bw * w * 0.5;
-    const by = b.y * h + b.bh * h * 0.5;
-
-    let grad = heatmapCtx.createRadialGradient(bx, by, 5, bx, by, 70);
-    grad.addColorStop(0, 'rgba(239, 68, 68, 0.5)'); // High density near booths
-    grad.addColorStop(0.5, 'rgba(245, 158, 11, 0.3)');
-    grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-    heatmapCtx.fillStyle = grad;
-    heatmapCtx.beginPath();
-    heatmapCtx.arc(bx, by, 70, 0, Math.PI*2);
-    heatmapCtx.fill();
-  });
-
-  // Animated simulation particles
-  if (simRunning && peopleCanvas) {
-    peopleCtx.clearRect(0, 0, w, h);
-    people.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if(p.x < 10 || p.x > w-10) p.vx *= -1;
-      if(p.y < 10 || p.y > h-10) p.vy *= -1;
-
-      peopleCtx.fillStyle = '#ffffff';
-      peopleCtx.beginPath();
-      peopleCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
-      peopleCtx.fill();
+  if (isRain) {
+    raindrops.forEach(r => {
+      r.y += r.vy;
+      r.x -= 1;
+      if (r.y > h) { r.y = 0; r.x = Math.random() * w; }
     });
   }
 }
 
 function renderLoop(){
   if (simRunning) {
-    redrawAllCanvases();
+    updateSimulationLogic();
   }
+
+  if (peopleCanvas && venueCanvas) {
+    const w = venueCanvas.width;
+    const h = venueCanvas.height;
+    drawPeople(w, h);
+    drawDynamicHeatmap(w, h);
+  }
+
   animFrameId = requestAnimationFrame(renderLoop);
 }
 
-function sendChat(){
-  const val = document.getElementById('chatIn').value;
-  if(!val) return;
-  const box = document.getElementById('chatBox');
-  box.innerHTML += `<div style="color:#1e293b;background:#ffffff;padding:8px;border-radius:8px;margin-bottom:8px;text-align:right;"><b>나:</b> ${val}</div>`;
-  document.getElementById('chatIn').value = '';
-  
-  setTimeout(() => {
-    box.innerHTML += `<div style="color:#0369a1;background:#e0f2fe;padding:8px;border-radius:8px;margin-bottom:8px;"><b>AI:</b> "${val}" 반영하여 동선과 배치를 성공적으로 재최적화했습니다.</div>`;
-    box.scrollTop = box.scrollHeight;
-    runAIGenerate();
-  }, 500);
+function drawDetailedOutdoorVenue(w, h){
+  if(!venueCtx || currentLayoutIndex < 0) return;
+  const currentBooths = layoutHistory[currentLayoutIndex].booths;
+
+  venueCtx.fillStyle = isRain ? '#254e2b' : '#3a7d44';
+  venueCtx.fillRect(0, 0, w, h);
+
+  // Boundary Trees
+  venueCtx.fillStyle = '#2d6135';
+  for(let x=5; x<w; x+=25){
+    venueCtx.beginPath(); venueCtx.arc(x, 8, 12, 0, Math.PI*2); venueCtx.fill();
+    venueCtx.beginPath(); venueCtx.arc(x, h-8, 12, 0, Math.PI*2); venueCtx.fill();
+  }
+
+  // Pedestrian Pathways
+  venueCtx.strokeStyle = isRain ? '#b0a898' : '#e2d9c8';
+  venueCtx.lineWidth = 26;
+  venueCtx.lineCap = 'round';
+  venueCtx.beginPath();
+  venueCtx.moveTo(w*0.5, h*0.88);
+  venueCtx.lineTo(w*0.5, h*0.5);
+  venueCtx.stroke();
+
+  // Central Lawn Rest Zone
+  venueCtx.fillStyle = isRain ? '#377341' : '#4fa15a';
+  venueCtx.beginPath();
+  venueCtx.ellipse(w*0.5, h*0.5, w*0.22, h*0.18, 0, 0, Math.PI*2);
+  venueCtx.fill();
+
+  // Draw Booths
+  Object.keys(currentBooths).forEach(key => {
+    const b = currentBooths[key];
+    drawGraphicBooth(venueCtx, b.x*w, b.y*h, b.bw*w, b.bh*h, b.title, b.color, b.icon);
+  });
+
+  // Gates
+  venueCtx.fillStyle = '#1e293b';
+  venueCtx.fillRect(w*0.42, h*0.86, w*0.16, h*0.08);
+  venueCtx.fillStyle = '#ffffff';
+  venueCtx.font = 'bold 10px Pretendard, sans-serif';
+  venueCtx.textAlign = 'center';
+  venueCtx.fillText('🚪 주출입구', w*0.5, h*0.91);
+}
+
+function drawGraphicBooth(ctx, x, y, bw, bh, title, color, icon){
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(x+3, y+3, bw, bh);
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x, y, bw, bh, 6);
+  ctx.fill();
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 10.5px Pretendard, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${icon} ${title}`, x + bw/2, y + bh/2 + 4);
+}
+
+function drawPeople(w, h){
+  if(!peopleCtx) return;
+  peopleCtx.clearRect(0,0,w,h);
+
+  // Draw People
+  people.forEach(p => {
+    peopleCtx.fillStyle = isRain ? '#60a5fa' : '#ffffff';
+    peopleCtx.beginPath();
+    peopleCtx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+    peopleCtx.fill();
+  });
+
+  // Draw Emergency Evacuation Route & Dynamic Patient Path to Relocated Medical Booth
+  if (isEmergency && emergencyPos) {
+    const currentBooths = layoutHistory[currentLayoutIndex].booths;
+    const med = currentBooths.medical;
+    const medCenterX = med.x * w + med.bw * w * 0.5;
+    const medCenterY = med.y * h + med.bh * h * 0.5;
+
+    // Draw Dynamic Red Route Line leading directly to the current Medical Booth
+    peopleCtx.strokeStyle = '#ef4444';
+    peopleCtx.lineWidth = 3;
+    peopleCtx.setLineDash([6, 6]);
+    peopleCtx.beginPath();
+    peopleCtx.moveTo(emergencyPos.x, emergencyPos.y);
+    peopleCtx.lineTo(medCenterX, medCenterY);
+    peopleCtx.stroke();
+    peopleCtx.setLineDash([]);
+
+    // Flashing Patient Icon
+    peopleCtx.fillStyle = '#ef4444';
+    peopleCtx.beginPath();
+    peopleCtx.arc(emergencyPos.x, emergencyPos.y, 8, 0, Math.PI*2);
+    peopleCtx.fill();
+
+    peopleCtx.fillStyle = '#ffffff';
+    peopleCtx.font = 'bold 9px Pretendard';
+    peopleCtx.textAlign = 'center';
+    peopleCtx.fillText('🚑 이송중', emergencyPos.x, emergencyPos.y - 10);
+  }
+
+  if (isRain) {
+    peopleCtx.strokeStyle = 'rgba(147, 197, 253, 0.5)';
+    peopleCtx.lineWidth = 1.2;
+    raindrops.forEach(r => {
+      peopleCtx.beginPath();
+      peopleCtx.moveTo(r.x, r.y);
+      peopleCtx.lineTo(r.x - 2, r.y + r.len);
+      peopleCtx.stroke();
+    });
+  }
+}
+
+function drawDynamicHeatmap(w, h){
+  if(!heatmapCtx) return;
+  heatmapCtx.clearRect(0,0,w,h);
+
+  const grid = {};
+  const gridSize = 40;
+
+  people.forEach(p => {
+    const gx = Math.floor(p.x / gridSize);
+    const gy = Math.floor(p.y / gridSize);
+    const key = `${gx}_${gy}`;
+    grid[key] = (grid[key] || 0) + 1;
+  });
+
+  Object.keys(grid).forEach(key => {
+    const [gx, gy] = key.split('_').map(Number);
+    const count = grid[key];
+    const cx = gx * gridSize + gridSize/2;
+    const cy = gy * gridSize + gridSize/2;
+
+    if (count >= 2) {
+      let radius = count * 12;
+      let alpha = Math.min(0.8, count * 0.15);
+      let grad = heatmapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      if (count >= 5) {
+        grad.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
+      } else {
+        grad.addColorStop(0, `rgba(245, 158, 11, ${alpha})`);
+      }
+      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+      heatmapCtx.fillStyle = grad;
+      heatmapCtx.beginPath();
+      heatmapCtx.arc(cx, cy, radius, 0, Math.PI*2);
+      heatmapCtx.fill();
+    }
+  });
+}
+
+function toggleSim(){
+  simRunning = !simRunning;
+  const btn = document.getElementById('btnToggleSim');
+  const timer = document.getElementById('simTimer');
+
+  if (simRunning) {
+    btn.textContent = '⏸ 시뮬레이션 일시정지';
+    timer.textContent = '상태: 실시간 군중 시뮬레이션 연산 중 ▶';
+  } else {
+    btn.textContent = '▶ 시뮬레이션 시작';
+    timer.textContent = '상태: 대기중';
+  }
+}
+
+function toggleRainEnv(){
+  isRain = !isRain;
+  const btn = document.getElementById('btnRain');
+  const badge = document.getElementById('envBadge');
+
+  if (isRain) {
+    btn.classList.add('active');
+    btn.textContent = '🌧️ 우천 모드 (ON)';
+    badge.textContent = '🌧️ 기상변수: 강우 발생';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🌧️ 우천 모드';
+    if(!isEmergency) badge.textContent = '일반 상태';
+  }
+  if (venueCanvas) drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
+}
+
+function triggerEmergencyEnv(){
+  isEmergency = !isEmergency;
+  const btn = document.getElementById('btnEmergency');
+  const badge = document.getElementById('envBadge');
+
+  if (isEmergency) {
+    btn.classList.add('active');
+    btn.textContent = '🚨 응급상황 해제';
+    badge.textContent = '🚨 응급환자 발생! 의료부스로 이송 중';
+
+    // Set emergency position far from medical booth
+    const w = venueCanvas.width;
+    const h = venueCanvas.height;
+    emergencyPos = { x: w * 0.15, y: h * 0.25 };
+
+    if(!simRunning) toggleSim();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🚨 응급환자 발생 (의료부스 후송)';
+    emergencyPos = null;
+    if(!isRain) badge.textContent = '일반 상태';
+  }
+}
+
+/* THREE.JS 3D VIEW ENGINE INTEGRATION */
+let is3DActive = false;
+let scene3D, camera3D, renderer3D;
+
+function toggle3DView(){
+  is3DActive = !is3DActive;
+  const container3D = document.getElementById('container3D');
+  const btn = document.getElementById('btnToggle3D');
+
+  if (is3DActive) {
+    container3D.style.display = 'block';
+    btn.textContent = '🗺️ 2D 평면도 보기';
+    init3DScene();
+  } else {
+    container3D.style.display = 'none';
+    btn.textContent = '🧊 3D 입체뷰 보기';
+  }
+}
+
+function init3DScene(){
+  const container = document.getElementById('container3D');
+  container.innerHTML = '';
+
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  scene3D = new THREE.Scene();
+  scene3D.background = new THREE.Color(0x0f172a);
+
+  camera3D = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+  camera3D.position.set(0, 150, 180);
+  camera3D.lookAt(0, 0, 0);
+
+  renderer3D = new THREE.WebGLRenderer({ antialias: true });
+  renderer3D.setSize(w, h);
+  container.appendChild(renderer3D.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  scene3D.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(50, 100, 50);
+  scene3D.add(dirLight);
+
+  // Ground Plane (Grass Field)
+  const groundGeo = new THREE.PlaneGeometry(200, 140);
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x2e7d32 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  scene3D.add(ground);
+
+  update3DScene();
+
+  function animate3D() {
+    if (is3DActive) {
+      requestAnimationFrame(animate3D);
+      scene3D.rotation.y += 0.003; // Auto Rotation for 3D View
+      renderer3D.render(scene3D, camera3D);
+    }
+  }
+  animate3D();
+}
+
+function update3DScene(){
+  if (!scene3D) return;
+
+  // Clear existing booth meshes
+  for(let i = scene3D.children.length - 1; i >= 0; i--) {
+    if(scene3D.children[i].userData.isBooth) {
+      scene3D.remove(scene3D.children[i]);
+    }
+  }
+
+  const currentBooths = layoutHistory[currentLayoutIndex].booths;
+
+  Object.keys(currentBooths).forEach(key => {
+    const b = currentBooths[key];
+    const bw = b.bw * 200;
+    const bh = b.bh * 140;
+    const bx = (b.x - 0.5) * 200 + bw/2;
+    const bz = (b.y - 0.5) * 140 + bh/2;
+
+    const height = key === 'stage' ? 18 : 10;
+    const geo = new THREE.BoxGeometry(bw, height, bh);
+    const colorHex = parseInt(b.color.replace('#', '0x'));
+    const mat = new THREE.MeshLambertMaterial({ color: colorHex });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(bx, height/2, bz);
+    mesh.userData.isBooth = true;
+    scene3D.add(mesh);
+  });
 }
 
 window.addEventListener('load', () => {
@@ -1374,4 +1797,4 @@ window.addEventListener('load', () => {
 </html>
 """
 
-components.html(EVENT_AI_HTML, height=1250, scrolling=True)
+components.html(EVENT_AI_HTML, height=1300, scrolling=True)
