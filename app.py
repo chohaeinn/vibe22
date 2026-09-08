@@ -171,7 +171,7 @@ def create_advanced_floor_plan(shape, event_type, attendees):
         
         # 야외 푸드트럭 / 부스 존
         for i, pos_x in enumerate([15, 35, 65, 85]):
-            fig.add_shape(type="rect", x0=pos_x-8, y0=30, x1=pos_x+8, y1=45, rx=4, ry=4,
+            fig.add_shape(type="rect", x0=pos_x-8, y0=30, x1=pos_x+8, y1=45,
                           fillcolor="rgba(251, 191, 36, 0.25)", line=dict(color="#FBBF24", width=1.5))
             fig.add_annotation(x=pos_x, y=37.5, text=f"🛖 부스/트럭 {i+1}", showarrow=False, font=dict(color="#FBBF24", size=10))
 
