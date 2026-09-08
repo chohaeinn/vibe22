@@ -1,5 +1,1 @@
-streamlit
-numpy
-pandas
-matplotlib
-scipy
+streamlit>=1.40,<2
