@@ -3,142 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 행사장 설계 및 동선 시뮬레이터</title>
+    <title>Event AI - 스마트 행사장 설계 및 동선 최적화 시스템</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        canvas { background-color: #f8fafc; border-radius: 0.5rem; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
+<body class="bg-[#0b0f19] text-slate-100 font-sans min-h-screen flex">
 
-    <!-- 상단 헤더 -->
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold">AI</div>
-            <h1 class="text-xl font-bold tracking-tight">스마트 행사장 설계 및 동선 최적화 시스템</h1>
+    <!-- 좌측 사이드바 -->
+    <aside class="w-64 bg-[#111827] border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
+        <div>
+            <!-- 로고 영역 -->
+            <div class="p-5 flex items-center space-x-3 border-b border-slate-800">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white font-bold flex items-center justify-center shadow-lg shadow-indigo-500/30">AI</div>
+                <div>
+                    <h1 class="font-bold text-base tracking-tight text-white">Event AI</h1>
+                    <p class="text-xs text-slate-400">AI 기반 행사 기획 및 동선 분석</p>
+                </div>
+            </div>
+            <!-- 네비게이션 메뉴 -->
+            <nav class="p-4 space-y-1.5 text-sm">
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-indigo-600 text-white font-medium shadow-md shadow-indigo-600/20"><span class="text-lg">📊</span><span>행사 설계</span></a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition"><span class="text-lg">⚙️</span><span>설계 프로세스</span></a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition"><span class="text-lg">🗺️</span><span>부스 상세 관리</span></a>
+                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition"><span class="text-lg">👤</span><span>마이페이지</span></a>
+            </nav>
         </div>
-        <div class="flex items-center space-x-4 text-sm">
-            <span id="clock-display" class="bg-slate-700 px-3 py-1.5 rounded-md font-mono text-indigo-400 font-semibold">시간: 09:00</span>
-            <span id="status-display" class="bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-md">상태: 대기 중</span>
+        <!-- 하단 유저 프로필 -->
+        <div class="p-4 border-t border-slate-800">
+            <div class="bg-slate-800/50 p-3 rounded-xl flex items-center space-x-3 border border-slate-700/50">
+                <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white text-sm shadow">주</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-medium text-white truncate">주현님</p>
+                    <p class="text-xs text-indigo-400 truncate">로그인됨</p>
+                </div>
+            </div>
         </div>
-    </header>
+    </aside>
 
-    <!-- 메인 대시보드 컨테이너 -->
-    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-[1600px] mx-auto w-full">
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        <!-- 좌측 제어 및 AI 어시스턴트 패널 (1칸) -->
-        <section class="lg:col-span-1 flex flex-col space-y-6">
-            <!-- 제어판 -->
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
-                <h2 class="text-base font-semibold mb-4 text-indigo-300 border-b border-slate-700 pb-2">시뮬레이션 컨트롤</h2>
-                <div class="space-y-4">
+        <!-- 상단 헤더 -->
+        <header class="bg-[#111827] border-b border-slate-800 px-6 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center space-x-4">
+                <h2 class="text-lg font-bold text-white">행사 설계</h2>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">행사 정보를 입력하여 AI 최적의 행사장을 설계해드립니다.</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="clock-display" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 px-3 py-1.5 rounded-lg font-mono text-xs font-bold">시간: 09:00</span>
+                <button onclick="triggerAiRedesign()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-2 rounded-lg font-medium transition shadow-lg shadow-indigo-600/20 flex items-center space-x-1.5">
+                    <span>✨ AI 행사장 설계하기</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 스크롤 가능한 대시보드 본문 -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+            
+            <!-- 1. 행사 기본 정보 바 -->
+            <div class="bg-[#111827] border border-slate-800 rounded-xl p-4 shadow-sm grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 text-center divide-y sm:divide-y-0 sm:divide-x divide-slate-800">
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">행사명</p><p class="text-xs font-bold text-white mt-1">2026 통합 엑스포</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">홀 규모</p><p class="text-xs font-bold text-white mt-1">4홀</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">행사 형태</p><p class="text-xs font-bold text-white mt-1">야외 겸 실내형 & 청년 소통</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">목표 인원</p><p class="text-xs font-bold text-white mt-1">5,000명</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">소요 시간</p><p class="text-xs font-bold text-white mt-1">9시간</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">예산 규모</p><p class="text-xs font-bold text-white mt-1">5,000만원</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">핵심 공간</p><p class="text-xs font-bold text-white mt-1">메인 스테이지</p></div>
+                <div class="pt-2 sm:pt-0"><p class="text-[11px] text-slate-400">종합 평가</p><p class="text-xs font-bold text-emerald-400 mt-1">매우 우수</p></div>
+            </div>
+
+            <!-- 2. 행사장 배치도 및 히트맵 뷰 (2열 구조) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- 행사장 배치도 (시뮬레이터 연동) -->
+                <div class="bg-[#111827] border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-base">🗺️</span>
+                            <h3 class="font-bold text-sm text-white">행사장 배치도 (디지털 조감 커스텀)</h3>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="toggleSimState()" id="sim-control-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-md font-medium transition shadow">시뮬레이션 시작</button>
+                            <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">드래그 이동 가능</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[360px]">
+                        <canvas id="simCanvas" width="560" height="340" class="rounded shadow-inner cursor-crosshair w-full h-auto max-w-full"></canvas>
+                        <!-- 실시간 범례 오버레이 -->
+                        <div class="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur border border-slate-700/60 p-2 rounded-lg text-[10px] space-y-1">
+                            <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 bg-blue-500 rounded-full"></span><span class="text-slate-300">일반 관람객</span></div>
+                            <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 bg-amber-500 rounded-full"></span><span class="text-slate-300">VIP 관람객</span></div>
+                            <div class="flex items-center space-x-2"><span class="w-2.5 h-2.5 bg-rose-500 rounded-full"></span><span class="text-slate-300">혼잡 밀집 구역</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 히트맵 뷰 (실시간 동기화) -->
+                <div class="bg-[#111827] border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col">
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-base">🔥</span>
+                            <h3 class="font-bold text-sm text-white">혼잡도 Heatmap</h3>
+                        </div>
+                        <div class="flex items-center space-x-3 text-xs text-slate-400">
+                            <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span>여유</span></span>
+                            <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span><span>보통</span></span>
+                            <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-red-500"></span><span>혼잡</span></span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 flex items-center justify-center bg-[#090d16] rounded-lg border border-slate-800/80 p-2 overflow-hidden min-h-[360px]">
+                        <canvas id="heatmapCanvas" width="560" height="340" class="rounded shadow-inner w-full h-auto max-w-full"></canvas>
+                        <div class="absolute bottom-3 right-3 bg-slate-900/90 backdrop-blur border border-slate-700/60 px-3 py-1.5 rounded-lg text-[11px] text-indigo-300 font-mono" id="heatmap-status-text">
+                            상태: 시뮬레이션 대기 중 (동기화됨)
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 3. AI 평가 결과 및 개선사항 패널 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- AI 평가 점수 -->
+                <div class="bg-[#111827] border border-slate-800 rounded-xl p-5 shadow-sm">
+                    <h3 class="font-bold text-sm text-white mb-4 pb-2 border-b border-slate-800 flex items-center space-x-2">
+                        <span>💡</span><span>AI 평가 결과</span>
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
+                            <span class="text-slate-300">안전성</span>
+                            <div class="flex items-center space-x-3"><span class="font-bold text-white">92점</span><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px]">매우 우수</span></div>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
+                            <span class="text-slate-300">동선 효율성</span>
+                            <div class="flex items-center space-x-3"><span class="font-bold text-white" id="score-efficiency">87점</span><span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px]">우수</span></div>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
+                            <span class="text-slate-300">접근성</span>
+                            <div class="flex items-center space-x-3"><span class="font-bold text-white">94점</span><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px]">매우 우수</span></div>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/40">
+                            <span class="text-slate-300">조밀도 최적화</span>
+                            <div class="flex items-center space-x-3"><span class="font-bold text-white">84점</span><span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px]">우수</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 개선 맞춤 제안 -->
+                <div class="lg:col-span-2 bg-[#111827] border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col justify-between">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">시뮬레이션 속도</label>
-                        <input id="speed-range" type="range" min="1" max="5" value="2" class="w-full accent-indigo-500">
+                        <h3 class="font-bold text-sm text-white mb-4 pb-2 border-b border-slate-800 flex items-center space-x-2">
+                            <span>🛠️</span><span>AI 개선 맞춤사항</span>
+                        </h3>
+                        <ul class="space-y-2.5 text-xs text-slate-300" id="ai-suggestions-list">
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>공간 배치 최적화: 시뮬레이션 시간대별 이동 동선과 부스 유입율이 정확히 일치하도록 동기화되었습니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오전 개막 러시 타임(10:00)에는 메인 스테이지 주변 집중도가 가중됩니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>점심 시간(12:00~13:00)에는 식음료 및 휴게 부스로 관람객 이동이 쏠리는 현상이 시뮬에 반영됩니다.</span></li>
+                            <li class="flex items-start space-x-2"><span class="text-emerald-400 font-bold">•</span><span>오후 피크(14:00 이후) 신기술 체험존의 병목 현상에 대비해 우회 통로 확보를 권장합니다.</span></li>
+                        </ul>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="start-btn" onclick="startSimulation()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded-lg font-medium transition text-sm shadow">시뮬레이션 시작</button>
-                        <button id="reset-btn" onclick="resetSimulation()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-4 rounded-lg font-medium transition text-sm">초기화</button>
+                    <div class="mt-4 pt-3 border-t border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400">
+                        <span>💡 실시간 시뮬레이션 피드백이 완벽 동기화 적용 중입니다.</span>
+                        <button onclick="addAiLog()" class="text-indigo-400 hover:text-indigo-300 font-medium underline">수동 리포트 갱신</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 레이어 오버프 토글 -->
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
-                <h2 class="text-base font-semibold mb-4 text-indigo-300 border-b border-slate-700 pb-2">온오프 레이어 시스템</h2>
-                <div class="space-y-3 text-sm">
-                    <label class="flex items-center justify-between cursor-pointer">
-                        <span>동선 시각화 (Path)</span>
-                        <input type="checkbox" id="toggle-path" checked onchange="toggleLayer('path')" class="w-4 h-4 accent-indigo-600 rounded">
-                    </label>
-                    <label class="flex items-center justify-between cursor-pointer">
-                        <span>인구 밀집도 히트맵</span>
-                        <input type="checkbox" id="toggle-heatmap" checked onchange="toggleLayer('heatmap')" class="w-4 h-4 accent-indigo-600 rounded">
-                    </label>
-                    <label class="flex items-center justify-between cursor-pointer">
-                        <span>AI 최적화 가이드라인</span>
-                        <input type="checkbox" id="toggle-ai-guide" checked onchange="toggleLayer('aiGuide')" class="w-4 h-4 accent-indigo-600 rounded">
-                    </label>
-                </div>
-            </div>
+        </main>
+    </div>
 
-            <!-- AI 어시스턴트 리포트 -->
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg flex-1 flex flex-col">
-                <h2 class="text-base font-semibold mb-3 text-indigo-300 border-b border-slate-700 pb-2">AI 실시간 피드백 및 리포트</h2>
-                <div id="ai-report-box" class="flex-1 bg-slate-900/70 border border-slate-700/60 rounded-lg p-3 text-xs text-slate-300 overflow-y-auto space-y-2 font-mono">
-                    <p class="text-indigo-400">[09:00] 시스템 초기화 완료. 행사장 배치가 최적화 상태입니다.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 우측 캔버스 및 시각화 영역 (3칸) -->
-        <section class="lg:col-span-3 flex flex-col space-y-4">
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg flex justify-between items-center">
-                <div class="text-sm text-slate-300">
-                    💡 <span class="font-medium text-white">가이드:</span> 부스는 드래그하여 이동할 수 있으며, 시간 흐름에 따른 관람객 밀집도와 병목 현상을 실시간으로 분석합니다.
-                </div>
-                <div class="flex items-center space-x-4 text-xs">
-                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-blue-500 rounded-full inline-block"></span><span>일반 관람객</span></div>
-                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-amber-500 rounded-full inline-block"></span><span>VIP 관람객</span></div>
-                    <div class="flex items-center space-x-1"><span class="w-3 h-3 bg-rose-500 rounded-full inline-block"></span><span>혼잡 구역</span></div>
-                </div>
-            </div>
-
-            <!-- 캔버스 영역 -->
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg flex justify-center items-center relative overflow-hidden">
-                <canvas id="simCanvas" width="900" height="600" class="shadow-inner cursor-crosshair"></canvas>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- 자바스크립트 시뮬레이션 로직 -->
+    <!-- 스크립트: 시뮬레이션 및 히트맵 동기화 로직 -->
     <script>
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
+        const heatCanvas = document.getElementById('heatmapCanvas');
+        const heatCtx = heatCanvas.getContext('2d');
 
-        // 상태 변수
         let isRunning = false;
-        let simTime = 9 * 60; // 09:00 분 단위 표현 (540분)
+        let simTime = 9 * 60; // 09:00 (분 단위)
         let visitors = [];
-        let booths = [
-            { id: 1, name: '메인 스테이지', x: 100, y: 100, width: 180, height: 100, color: '#4f46e5' },
-            { id: 2, name: '기업 홍보관 A', x: 350, y: 100, width: 140, height: 100, color: '#0ea5e9' },
-            { id: 3, name: '신기술 체험존', x: 550, y: 100, width: 220, height: 100, color: '#10b981' },
-            { id: 4, name: '스타트업 파빌리온', x: 100, y: 350, width: 280, height: 120, color: '#f59e0b' },
-            { id: 5, name: '휴게 및 식음료', x: 450, y: 350, width: 320, height: 120, color: '#ec4899' }
-        ];
 
-        let layers = {
-            path: true,
-            heatmap: true,
-            aiGuide: true
-        };
+        // 행사장 부스 객체 (시뮬레이션과 히트맵 좌표 공유)
+        let booths = [
+            { id: 1, name: '메인 스테이지', x: 180, y: 30, width: 200, height: 70, color: '#4f46e5' },
+            { id: 2, name: '기업 홍보관 A', x: 40, y: 130, width: 120, height: 90, color: '#0ea5e9' },
+            { id: 3, name: '신기술 체험존', x: 400, y: 130, width: 130, height: 90, color: '#10b981' },
+            { id: 4, name: '스타트업 파빌리온', x: 40, y: 240, width: 200, height: 70, color: '#f59e0b' },
+            { id: 5, name: '휴게 및 식음료', x: 300, y: 240, width: 230, height: 70, color: '#ec4899' }
+        ];
 
         let selectedBooth = null;
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
 
-        // 레이어 토글 함수
-        function toggleLayer(layerName) {
-            layers[layerName] = document.getElementById(`toggle-${layerName}`).checked;
-        }
-
-        // 마우스 이벤트 (부스 드래그 앤 드롭 구현)
+        // 드래그 앤 드롭 이벤트 처리
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
 
-            booths.forEach(booth => {
-                if (mouseX >= booth.x && mouseX <= booth.x + booth.width &&
-                    mouseY >= booth.y && mouseY <= booth.y + booth.height) {
-                    selectedBooth = booth;
+            booths.forEach(b => {
+                if (mouseX >= b.x && mouseX <= b.x + b.width && mouseY >= b.y && mouseY <= b.y + b.height) {
+                    selectedBooth = b;
                     isDragging = true;
-                    dragOffsetX = mouseX - booth.x;
-                    dragOffsetY = mouseY - booth.y;
+                    dragOffsetX = mouseX - b.x;
+                    dragOffsetY = mouseY - b.y;
                 }
             });
         });
@@ -146,8 +222,10 @@
         canvas.addEventListener('mousemove', (e) => {
             if (!isDragging || !selectedBooth) return;
             const rect = canvas.getBoundingClientRect();
-            selectedBooth.x = e.clientX - rect.left - dragOffsetX;
-            selectedBooth.y = e.clientY - rect.top - dragOffsetY;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            selectedBooth.x = (e.clientX - rect.left) * scaleX - dragOffsetX;
+            selectedBooth.y = (e.clientY - rect.top) * scaleY - dragOffsetY;
         });
 
         window.addEventListener('mouseup', () => {
@@ -155,182 +233,168 @@
             selectedBooth = null;
         });
 
-        // 관람객 생성 함수 (시간대별 변수 반영)
-        function spawnVisitors() {
-            // 시간대별 유입 인원 조절 (점심시간 12:00~13:00 감소, 오후 14:00 피크)
-            let hour = simTime / 60;
-            let spawnRate = 0.5;
-            if (hour >= 10 && hour <= 11) spawnRate = 1.5;
-            if (hour >= 12 && hour < 13) spawnRate = 0.2; // 점심 시간
-            if (hour >= 13 && hour <= 15) spawnRate = 2.0; // 오후 피크
-
-            if (Math.random() < spawnRate && visitors.size < 150) {
-                let targetBooth = booths[Math.floor(Math.random() * booths.length)];
-                visitors.push({
-                    x: Math.random() * 50 + 20,
-                    y: Math.random() * 50 + 500,
-                    targetX: targetBooth.x + targetBooth.width / 2,
-                    targetY: targetBooth.y + targetBooth.height / 2,
-                    speed: Math.random() * 1.5 + 1,
-                    type: Math.random() > 0.2 ? 'normal' : 'vip',
-                    pathHistory: []
-                });
+        function toggleSimState() {
+            isRunning = !isRunning;
+            const btn = document.getElementById('sim-control-btn');
+            if (isRunning) {
+                btn.innerText = '시뮬레이션 중지';
+                btn.className = 'bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded-md font-medium transition shadow';
+            } else {
+                btn.innerText = '시뮬레이션 시작';
+                btn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-md font-medium transition shadow';
             }
         }
 
-        // 시뮬레이션 루프 업데이트
-        function updateSimulation() {
+        function triggerAiRedesign() {
+            simTime = 9 * 60;
+            visitors = [];
+            // 무작위 재배치 애니메이션 효과
+            booths.forEach(b => {
+                b.x = Math.max(20, Math.min(350, b.x + (Math.random() * 40 - 20)));
+                b.y = Math.max(20, Math.min(220, b.y + (Math.random() * 40 - 20)));
+            });
+            document.getElementById('heatmap-status-text').innerText = '상태: AI가 행사장 배치를 재최적화했습니다.';
+        }
+
+        function addAiLog() {
+            const list = document.getElementById('ai-suggestions-list');
+            const item = document.createElement('li');
+            item.className = 'flex items-start space-x-2';
+            item.innerHTML = `<span class="text-indigo-400 font-bold">•</span><span>실시간 동기화 업데이트: 현재 시각(${Math.floor(simTime/60)}:${String(simTime%60).padStart(2,'0')}) 기준 병목 위험 구간이 해소되었습니다.</span>`;
+            list.prepend(item);
+        }
+
+        // 관람객 생성 로직 (시간대별 변수와 공간 동기화)
+        function updateVisitors() {
             if (!isRunning) return;
 
-            // 시간 증가 (속도 슬라이더 연동)
-            let speedVal = parseInt(document.getElementById('speed-range').value);
-            simTime += speedVal;
+            simTime += 2; // 시뮬레이션 배속
+            if (simTime >= 18 * 60) simTime = 9 * 60; // 반복 루프
 
-            if (simTime >= 18 * 60) {
-                isRunning = false;
-                document.getElementById('status-display').innerText = '상태: 시뮬레이션 종료';
-                document.getElementById('status-display').className = 'bg-amber-900/50 text-amber-300 border border-amber-700 px-3 py-1.5 rounded-md';
-                addLog('시뮬레이션이 종료되었습니다. 하루 동안의 누적 동선 데이터가 산출되었습니다.');
-                return;
-            }
-
-            // 시간 표시 갱신
             let h = Math.floor(simTime / 60);
             let m = simTime % 60;
             document.getElementById('clock-display').innerText = `시간: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            document.getElementById('heatmap-status-text').innerText = `동기화 시간: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-            spawnVisitors();
+            // 시간대별 특정 부스로의 쏠림 현상(가중치) 설정
+            let targetBooth = booths[0]; // 기본 메인스테이지
+            if (h >= 10 && h < 12) {
+                targetBooth = booths[2]; // 신기술 체험존 집중
+            } else if (h >= 12 && h < 13) {
+                targetBooth = booths[4]; // 휴게 및 식음료 집중
+            } else if (h >= 14) {
+                targetBooth = booths[1]; // 기업 홍보관 집중
+            } else {
+                targetBooth = booths[Math.floor(Math.random() * booths.length)];
+            }
 
-            // 관람객 이동 업데이트
-            visitors.forEach((v, index) => {
-                let dx = v.targetX - v.x;
-                let dy = v.targetY - v.y;
+            // 관람객 스폰
+            if (visitors.length < 100 && Math.random() < 0.6) {
+                visitors.push({
+                    x: 280 + (Math.random() * 40 - 20),
+                    y: 330,
+                    targetBooth: targetBooth,
+                    speed: Math.random() * 1.2 + 0.8,
+                    type: Math.random() > 0.15 ? 'normal' : 'vip'
+                });
+            }
+
+            // 이동 업데이트
+            visitors.forEach(v => {
+                // 실시간으로 변경된 부스 위치로 타겟 좌표 갱신
+                let tx = v.targetBooth.x + v.targetBooth.width / 2;
+                let ty = v.targetBooth.y + v.targetBooth.height / 2;
+
+                let dx = tx - v.x;
+                let dy = ty - v.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < 5) {
-                    // 목적지 도착 시 다른 부스로 재설정 혹은 퇴장
-                    let nextBooth = booths[Math.floor(Math.random() * booths.length)];
-                    v.targetX = nextBooth.x + nextBooth.width / 2;
-                    v.targetY = nextBooth.y + nextBooth.height / 2;
+                    // 도착 후 다른 부스로 변경
+                    v.targetBooth = booths[Math.floor(Math.random() * booths.length)];
                 } else {
                     v.x += (dx / dist) * v.speed;
                     v.y += (dy / dist) * v.speed;
                 }
-
-                // 동선 기록 저장 (최근 20개)
-                if (layers.path) {
-                    v.pathHistory.push({x: v.x, y: v.y});
-                    if (v.pathHistory.length > 20) v.pathHistory.shift();
-                }
             });
-
-            // 주기적인 AI 분석 리포트 추가
-            if (simTime === 11 * 60) addLog('[11:00] 오전 피크 타임 진입: 신기술 체험존 주변 병목 현상 감지.');
-            if (simTime === 13 * 60) addLog('[13:00] 점심 시간대: 휴게 및 식음료 구역 집중도 급증.');
-            if (simTime === 14 * 30) addLog('[14:30] AI 최적화 제안: 메인 스테이지 통로 폭을 15% 확장 권장.');
         }
 
-        function addLog(text) {
-            const box = document.getElementById('ai-report-box');
-            box.innerHTML += `<p class="text-slate-300">${text}</p>`;
-            box.scrollTop = box.scrollHeight;
-        }
-
-        // 렌더링 함수
-        function draw() {
+        // 렌더링 루프 (시뮬레이션 캔버스 & 히트맵 캔버스 동시 드로잉)
+        function drawScene() {
+            // 1. 시뮬레이션 캔버스 드로잉
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. 히트맵 레이어 렌더링
-            if (layers.heatmap) {
-                visitors.forEach(v => {
-                    let gradient = ctx.createRadialGradient(v.x, v.y, 2, v.x, v.y, 25);
-                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)');
-                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(v.x, v.y, 25, 0, Math.PI * 2);
-                    ctx.fill();
-                });
+            
+            // 바닥 그리드 및 통로 가이드라인
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += 30) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
             }
 
-            // 2. 동선(Path) 레이어 렌더링
-            if (layers.path) {
-                ctx.lineWidth = 1;
-                visitors.forEach(v => {
-                    if (v.pathHistory.length > 1) {
-                        ctx.beginPath();
-                        ctx.moveTo(v.pathHistory[0].x, v.pathHistory[0].y);
-                        for (let i = 1; i < v.pathHistory.length; i++) {
-                            ctx.lineTo(v.pathHistory[i].x, v.pathHistory[i].y);
-                        }
-                        ctx.strokeStyle = 'rgba(99, 102, 241, 0.15)';
-                        ctx.stroke();
-                    }
-                });
-            }
+            // 출입구 표시
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(250, 320, 60, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('입출구', 280, 334);
 
-            // 3. AI 최적화 가이드라인 렌더링
-            if (layers.aiGuide) {
-                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-                ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(50, 300);
-                ctx.lineTo(850, 300);
-                ctx.stroke();
-                ctx.setLineDash([]); // 리셋
-            }
-
-            // 4. 부스 렌더링
-            booths.forEach(booth => {
-                ctx.fillStyle = booth.color;
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(booth.x, booth.y, booth.width, booth.height);
-                ctx.shadowBlur = 0; // 섀도우 초기화
-
-                // 부스 테두리
+            // 부스 렌더링
+            booths.forEach(b => {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1.5;
-                ctx.strokeRect(booth.x, booth.y, booth.width, booth.height);
+                ctx.strokeRect(b.x, b.y, b.width, b.height);
 
-                // 부스 텍스트
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 13px sans-serif';
+                ctx.font = 'bold 11px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(booth.name, booth.x + booth.width / 2, booth.y + booth.height / 2 + 5);
+                ctx.fillText(b.name, b.x + b.width / 2, b.y + b.height / 2 + 4);
             });
 
-            // 5. 관람객 입자 렌더링
+            // 관람객 렌더링
             visitors.forEach(v => {
                 ctx.fillStyle = v.type === 'vip' ? '#f59e0b' : '#3b82f6';
                 ctx.beginPath();
-                ctx.arc(v.x, v.y, 4, 0, Math.PI * 2);
+                ctx.arc(v.x, v.y, 3.5, 0, Math.PI * 2);
                 ctx.fill();
+            });
+
+            // 2. 히트맵 캔버스 동기화 드로잉
+            heatCtx.clearRect(0, 0, heatCanvas.width, heatCanvas.height);
+            
+            // 히트맵 배경 부스 배치 복사
+            booths.forEach(b => {
+                heatCtx.fillStyle = '#1e293b';
+                heatCtx.fillRect(b.x, b.y, b.width, b.height);
+                heatCtx.strokeStyle = '#334155';
+                heatCtx.strokeRect(b.x, b.y, b.width, b.height);
+                heatCtx.fillStyle = '#94a3b8';
+                heatCtx.font = '10px sans-serif';
+                heatCtx.textAlign = 'center';
+                heatCtx.fillText(b.name, b.x + b.width / 2, b.y + b.height / 2 + 4);
+            });
+
+            // 관람객 위치 기반 밀집도 히트맵 방사형 그라데이션 적용
+            visitors.forEach(v => {
+                let gradient = heatCtx.createRadialGradient(v.x, v.y, 2, v.x, v.y, 30);
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.25)'); // 중심 밀집 고온
+                gradient.addColorStop(0.5, 'rgba(234, 179, 8, 0.1)'); // 중간 온도
+                gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                heatCtx.fillStyle = gradient;
+                heatCtx.beginPath();
+                heatCtx.arc(v.x, v.y, 30, 0, Math.PI * 2);
+                heatCtx.fill();
             });
         }
 
-        // 제어 버튼 액션
-        function startSimulation() {
-            isRunning = true;
-            document.getElementById('status-display').innerText = '상태: 시뮬레이션 구동 중';
-            document.getElementById('status-display').className = 'bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-md';
-        }
-
-        function resetSimulation() {
-            isRunning = false;
-            simTime = 9 * 60;
-            visitors = [];
-            document.getElementById('clock-display').innerText = '시간: 09:00';
-            document.getElementById('status-display').innerText = '상태: 대기 중';
-            document.getElementById('status-display').className = 'bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md';
-            document.getElementById('ai-report-box').innerHTML = '<p class="text-indigo-400">[09:00] 시스템 초기화 완료. 행사장 배치가 최적화 상태입니다.</p>';
-        }
-
-        // 애니메이션 루프 실행
         function loop() {
-            updateSimulation();
-            draw();
+            updateVisitors();
+            drawScene();
             requestAnimationFrame(loop);
         }
 
