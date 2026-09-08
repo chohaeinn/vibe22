@@ -1,22 +1,25 @@
 import hashlib
 import json
+import math
 import os
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-# 1. 페이지 및 기본 설정
+# ---------------------------------------------------------
+# 1. 페이지 기본 설정 및 세션 초기화
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="Vibe Venue - 스마트 공간 대시보드",
+    page_title="Vibe Venue - Pro 공간 설계 대시보드",
     page_icon="📐",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 USER_DB_FILE = "users.json"
 
 
-# 2. 로그인/회원가입 계정 관리
 def load_users():
     if os.path.exists(USER_DB_FILE):
         try:
@@ -36,299 +39,355 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 
-# 3. 디테일한 평면도 생성 (Plotly rx, ry 오류 완벽 수정)
-def create_advanced_floor_plan(
-    venue_shape,
-    event_type,
-    attendees,
-    include_vip=True,
-    include_catering=True,
-):
+# ---------------------------------------------------------
+# 2. 둥근 사각형 SVG Path 생성 함수 (Plotly rx/ry 에러 방지)
+# ---------------------------------------------------------
+def get_rounded_rect_path(x0, y0, x1, y1, r=2):
+    w = abs(x1 - x0)
+    h = abs(y1 - y0)
+    r = min(r, w / 2, h / 2)
+    return (
+        f"M {x0+r},{y0} "
+        f"L {x1-r},{y0} Q {x1},{y0} {x1},{y0+r} "
+        f"L {x1},{y1-r} Q {x1},{y1} {x1-r},{y1} "
+        f"L {x0+r},{y1} Q {x0},{y1} {x0},{y1-r} "
+        f"L {x0},{y0+r} Q {x0},{y0} {x0+r},{y0} Z"
+    )
+
+
+# ---------------------------------------------------------
+# 3. 고도화된 건축형 평면도 생성 엔진
+# ---------------------------------------------------------
+def draw_pro_floor_plan(opts):
     fig = go.Figure()
 
-    # (1) 공간 외벽
-    if venue_shape == "L자형":
+    # 테마 색상 설정
+    theme_colors = {
+        "Dark Tech": {
+            "bg": "#0F172A",
+            "wall": "#0284C7",
+            "wall_fill": "#1E293B",
+            "text": "#F8FAFC",
+            "grid": "#334155",
+        },
+        "Blueprint": {
+            "bg": "#1E3A8A",
+            "wall": "#93C5FD",
+            "wall_fill": "#1E40AF",
+            "text": "#FFFFFF",
+            "grid": "#3B82F6",
+        },
+        "Modern Light": {
+            "bg": "#F8FAFC",
+            "wall": "#334155",
+            "wall_fill": "#E2E8F0",
+            "text": "#0F172A",
+            "grid": "#CBD5E1",
+        },
+    }
+    tc = theme_colors.get(
+        opts["theme"], theme_colors["Dark Tech"]
+    )
+
+    # (1) 건물 외벽 (Shape)
+    if opts["shape"] == "L자형":
+        path = "M 0,0 L 100,0 L 100,50 L 50,50 L 50,100 L 0,100 Z"
+    elif opts["shape"] == "U자형":
+        path = "M 0,0 L 100,0 L 100,100 L 70,100 L 70,30 L 30,30 L 30,100 L 0,100 Z"
+    else:  # 직사각형 / 정사각형
+        path = get_rounded_rect_path(0, 0, 100, 100, r=1)
+
+    fig.add_shape(
+        type="path",
+        path=path,
+        line=dict(color=tc["wall"], width=4),
+        fillcolor=tc["wall_fill"],
+    )
+
+    # (2) 부속 구역 그리기 전용 헬퍼 함수
+    def add_zone(
+        x0,
+        y0,
+        x1,
+        y1,
+        title,
+        icon,
+        border_color,
+        fill_color,
+        text_color="#FFFFFF",
+    ):
         fig.add_shape(
             type="path",
-            path="M 0,0 L 100,0 L 100,50 L 50,50 L 50,100 L 0,100 Z",
-            line=dict(color="#0284C7", width=4),
-            fillcolor="#1E293B",
+            path=get_rounded_rect_path(x0, y0, x1, y1, r=2),
+            line=dict(color=border_color, width=2),
+            fillcolor=fill_color,
         )
-    else:
-        fig.add_shape(
-            type="rect",
-            x0=0,
-            y0=0,
-            x1=100,
-            y1=100,
-            line=dict(color="#0284C7", width=4),
-            fillcolor="#1E293B",
+        fig.add_annotation(
+            x=(x0 + x1) / 2,
+            y=(y0 + y1) / 2,
+            text=f"<b>{icon} {title}</b>",
+            showarrow=False,
+            font=dict(color=text_color, size=11),
+            align="center",
         )
 
-    # (2) 메인 입구 및 안내 데스크 (하단)
-    fig.add_shape(
-        type="rect",
-        x0=38,
-        y0=0,
-        x1=62,
-        y1=10,
-        line=dict(color="#10B981", width=2),
-        fillcolor="#064E3B",
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=[50],
-            y=[5],
-            text=["🚪 메인 입구 & 안내 데스크"],
-            mode="text",
-            textfont=dict(color="#A7F3D0", size=12),
-            showlegend=False,
-        )
-    )
-
-    # (3) 화장실 (남/여) (우측 하단)
-    fig.add_shape(
-        type="rect",
-        x0=82,
-        y0=2,
-        x1=98,
-        y1=18,
-        line=dict(color="#6366F1", width=2),
-        fillcolor="#312E81",
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=[90],
-            y=[10],
-            text=["🚻 화장실\n(남/여)"],
-            mode="text",
-            textfont=dict(color="#E0E7FF", size=11),
-            showlegend=False,
-        )
-    )
-
-    # (4) 비상구 표시 (3개소)
-    exits = [(0, 50, "← 비상구"), (100, 50, "비상구 →"), (50, 100, "↑ 비상구")]
-    for ex_x, ex_y, label in exits:
-        if venue_shape == "L자형" and ex_x == 100 and ex_y > 50:
-            continue
-        fig.add_trace(
-            go.Scatter(
-                x=[ex_x],
-                y=[ex_y],
-                mode="text",
-                text=[f"🚨 {label}"],
-                textfont=dict(color="#EF4444", size=11),
-                showlegend=False,
-            )
+    # (3) 구역배치 - 안내/등록 데스크
+    if opts["show_reg_desk"]:
+        add_zone(
+            35,
+            2,
+            65,
+            12,
+            "안내 / 등록 데스크",
+            "📋",
+            "#10B981",
+            "#064E3B",
+            "#A7F3D0",
         )
 
-    # (5) 선택 옵션: 케이터링 존 (좌측 하단)
-    if include_catering:
-        fig.add_shape(
-            type="rect",
-            x0=2,
-            y0=2,
-            x1=22,
-            y1=18,
-            line=dict(color="#F59E0B", width=2),
-            fillcolor="#78350F",
+    # (4) 구역배치 - 화장실
+    if opts["restroom_pos"] == "우측 하단":
+        add_zone(
+            80, 2, 98, 18, "남/여 화장실", "🚻", "#8B5CF6", "#4C1D95", "#DDD6FE"
         )
-        fig.add_trace(
-            go.Scatter(
-                x=[12],
-                y=[10],
-                text=["☕ 케이터링\n& 스낵존"],
-                mode="text",
-                textfont=dict(color="#FDE68A", size=11),
-                showlegend=False,
-            )
+    elif opts["restroom_pos"] == "좌측 하단":
+        add_zone(
+            2, 2, 20, 18, "남/여 화장실", "🚻", "#8B5CF6", "#4C1D95", "#DDD6FE"
         )
 
-    # (6) 선택 옵션: VIP 라운지 (좌측 상단)
-    if include_vip:
-        fig.add_shape(
-            type="rect",
-            x0=2,
-            y0=80,
-            x1=22,
-            y1=98,
-            line=dict(color="#EC4899", width=2),
-            fillcolor="#831843",
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[12],
-                y=[89],
-                text=["👑 VIP 라운지"],
-                mode="text",
-                textfont=dict(color="#FBCFE8", size=11),
-                showlegend=False,
-            )
+    # (5) 구역배치 - VIP 라운지
+    if opts["show_vip"]:
+        add_zone(
+            2,
+            80,
+            24,
+            98,
+            "VIP 라운지",
+            "👑",
+            "#EC4899",
+            "#831843",
+            "#FBCFE8",
         )
 
-    # (7) 행사 유형별 메인 존 및 배치
-    if event_type == "세미나/강연":
-        # 메인 무대
-        fig.add_shape(
-            type="rect",
-            x0=28,
-            y0=78,
-            x1=72,
-            y1=95,
-            line=dict(color="#3B82F6", width=2),
-            fillcolor="#1E3A8A",
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[50],
-                y=[86.5],
-                text=["🎤 MAIN STAGE (강연 무대 & 대형 스크린)"],
-                mode="text",
-                textfont=dict(color="#93C5FD", size=12),
-                showlegend=False,
-            )
+    # (6) 구역배치 - 케이터링 & 바
+    if opts["show_catering"]:
+        add_zone(
+            76,
+            80,
+            98,
+            98,
+            "케이터링 & 바",
+            "☕",
+            "#F59E0B",
+            "#78350F",
+            "#FDE68A",
         )
 
-        # 객석 배치
+    # (7) 구역배치 - 포토존
+    if opts["show_photo"]:
+        add_zone(
+            2,
+            40,
+            18,
+            60,
+            "포토존",
+            "📸",
+            "#06B6D4",
+            "#164E63",
+            "#CFFAFE",
+        )
+
+    # (8) 구역배치 - 음향/조명 제어실 (Console)
+    if opts["show_control"]:
+        add_zone(
+            38,
+            15,
+            62,
+            23,
+            "음향 / 조명 제어석",
+            "🜲",
+            "#64748B",
+            "#334155",
+            "#E2E8F0",
+        )
+
+    # (9) 무대(Stage) 위치 설정
+    if opts["stage_pos"] != "없음":
+        st_coords = {
+            "상단": (25, 82, 75, 98),
+            "중앙": (35, 42, 65, 58),
+            "좌측": (2, 30, 18, 70),
+        }
+        sx0, sy0, sx1, sy1 = st_coords[opts["stage_pos"]]
+        add_zone(
+            sx0,
+            sy0,
+            sx1,
+            sy1,
+            "MAIN STAGE",
+            "🎤",
+            "#3B82F6",
+            "#1E3A8A",
+            "#93C5FD",
+        )
+
+    # (10) 좌석/테이블/부스 세부 배치 연산
+    layout_style = opts["layout_style"]
+    count = min(opts["attendees"], 120)
+
+    if layout_style == "강의식 (Theater)":
         cols = 10
-        max_seats = min(attendees, 80)
-        x_coords, y_coords = [], []
-        for i in range(max_seats):
-            r = i // cols
-            c = i % cols
-            x_coords.append(22 + c * 6)
-            y_coords.append(68 - r * 5)
-
-        fig.add_trace(
-            go.Scatter(
-                x=x_coords,
-                y=y_coords,
-                mode="markers",
-                marker=dict(size=8, color="#38BDF8", symbol="square"),
-                name="일반 좌석",
+        for i in range(count):
+            r, c = i // cols, i % cols
+            x = 22 + c * 6
+            y = 72 - r * 4.5
+            if (
+                opts["stage_pos"] == "상단" and y > 78
+            ):  # 무대와 겹침 방지
+                continue
+            fig.add_shape(
+                type="rect",
+                x0=x - 2,
+                y0=y - 1.5,
+                x1=x + 2,
+                y1=y + 1.5,
+                line=dict(color="#38BDF8", width=1),
+                fillcolor="#0284C7",
             )
-        )
 
-    elif event_type == "연회/파티":
-        # 메인 댄스/이벤트 플로어
-        fig.add_shape(
-            type="rect",
-            x0=40,
-            y0=40,
-            x1=60,
-            y1=60,
-            line=dict(color="#F43F5E", width=2),
-            fillcolor="#881337",
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[50],
-                y=[50],
-                text=["💃 메인 플로어"],
-                mode="text",
-                textfont=dict(color="#FECDD3", size=12),
-                showlegend=False,
-            )
-        )
-
-        # 원형 연회 테이블
-        table_centers = [
-            (25, 30),
-            (25, 70),
-            (75, 30),
-            (75, 70),
-            (30, 50),
-            (70, 50),
-            (50, 78),
+    elif layout_style == "연회식 (Round Table)":
+        tables = [
+            (30, 35),
+            (50, 35),
+            (70, 35),
+            (30, 60),
+            (50, 60),
+            (70, 60),
+            (40, 78),
+            (60, 78),
         ]
-        for idx, (tx, ty) in enumerate(table_centers):
+        for idx, (tx, ty) in enumerate(tables):
             fig.add_shape(
                 type="circle",
-                x0=tx - 6,
-                y0=ty - 6,
-                x1=tx + 6,
-                y1=ty + 6,
+                x0=tx - 5,
+                y0=ty - 5,
+                x1=tx + 5,
+                y1=ty + 5,
                 line=dict(color="#F59E0B", width=2),
                 fillcolor="#451A03",
             )
-            fig.add_trace(
-                go.Scatter(
-                    x=[tx],
-                    y=[ty],
-                    text=[f"T-{idx+1}"],
-                    mode="text",
-                    textfont=dict(color="#FDE68A", size=11),
-                    showlegend=False,
-                )
+            fig.add_annotation(
+                x=tx,
+                y=ty,
+                text=f"T-{idx+1}",
+                showarrow=False,
+                font=dict(color="#FDE68A", size=10),
             )
 
-    else:  # 전시회
-        # 전시 부스 배치
+    elif layout_style == "전시 부스 (Exhibition)":
         booths = [
-            (25, 65, "A-1"),
-            (45, 65, "A-2"),
-            (65, 65, "A-3"),
-            (25, 35, "B-1"),
-            (45, 35, "B-2"),
-            (65, 35, "B-3"),
+            (30, 70, "A-1"),
+            (50, 70, "A-2"),
+            (70, 70, "A-3"),
+            (30, 45, "B-1"),
+            (50, 45, "B-2"),
+            (70, 45, "B-3"),
         ]
         for bx, by, bname in booths:
-            fig.add_shape(
-                type="rect",
-                x0=bx - 7,
-                y0=by - 7,
-                x1=bx + 7,
-                y1=by + 7,
-                line=dict(color="#10B981", width=2),
-                fillcolor="#064E3B",
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=[bx],
-                    y=[by],
-                    text=[f"🏛️ 부스\n{bname}"],
-                    mode="text",
-                    textfont=dict(color="#D1FAE5", size=11),
-                    showlegend=False,
-                )
+            add_zone(
+                bx - 7,
+                by - 6,
+                bx + 7,
+                by + 6,
+                f"부스 {bname}",
+                "🏛️",
+                "#10B981",
+                "#064E3B",
+                "#D1FAE5",
             )
 
+    elif layout_style == "ㄷ자형 회의 (U-Shape)":
+        u_pts = [
+            (25, y) for y in range(30, 75, 6)
+        ] + [
+            (x, 30) for x in range(25, 78, 6)
+        ] + [
+            (75, y) for y in range(30, 75, 6)
+        ]
+        for px_pos, py_pos in u_pts:
+            fig.add_shape(
+                type="rect",
+                x0=px_pos - 1.8,
+                y0=py_pos - 1.8,
+                x1=px_pos + 1.8,
+                y1=py_pos + 1.8,
+                line=dict(color="#A855F7", width=1),
+                fillcolor="#6B21A8",
+            )
+
+    # (11) 동선 및 비상구 표시
+    if opts["show_routes"]:
+        # 비상구 라벨
+        exits = [(50, 0, "메인 출입구 🚪"), (0, 50, "🚨 비상구 A"), (100, 50, "🚨 비상구 B")]
+        for ex, ey, elabel in exits:
+            fig.add_annotation(
+                x=ex,
+                y=ey,
+                text=elabel,
+                showarrow=True,
+                arrowhead=2,
+                arrowcolor="#EF4444",
+                font=dict(color="#EF4444", size=11),
+                bgcolor=tc["bg"],
+            )
+
+    # 레이아웃 스타일 적용
     fig.update_layout(
         title=dict(
-            text=f"📐 [상세 평면도] {venue_shape} | {event_type} (참석: {attendees}명)",
-            font=dict(size=16, color="#F8FAFC"),
+            text=f"📐 [도면] {opts['shape']} | {opts['layout_style']} (수용: {opts['attendees']}명)",
+            font=dict(size=16, color=tc["text"]),
         ),
-        xaxis=dict(range=[-5, 105], showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(
-            range=[-5, 105],
-            showgrid=False,
+        xaxis=dict(
+            range=[-8, 108],
+            showgrid=opts["show_grid"],
+            gridcolor=tc["grid"],
             zeroline=False,
-            visible=False,
+            visible=opts["show_grid"],
+        ),
+        yaxis=dict(
+            range=[-8, 108],
+            showgrid=opts["show_grid"],
+            gridcolor=tc["grid"],
+            zeroline=False,
+            visible=opts["show_grid"],
             scaleanchor="x",
             scaleratio=1,
         ),
-        width=800,
-        height=650,
-        plot_bgcolor="#0F172A",
-        paper_bgcolor="#0F172A",
-        margin=dict(l=10, r=10, t=40, b=10),
+        width=850,
+        height=680,
+        plot_bgcolor=tc["bg"],
+        paper_bgcolor=tc["bg"],
+        margin=dict(l=20, r=20, t=50, b=20),
     )
 
     return fig
 
 
-# 4. 로그인 / 회원가입 화면
+# ---------------------------------------------------------
+# 4. 로그인 / 회원가입 UI
+# ---------------------------------------------------------
 def auth_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.title("🔒 Vibe Venue 대시보드")
+        st.title("🔒 Vibe Venue 로그인")
         tab1, tab2 = st.tabs(["🔑 로그인", "📝 회원가입"])
         users = load_users()
 
         with tab1:
             login_id = st.text_input("아이디", key="login_id")
-            login_pw = st.text_input("비밀번호", type="password", key="login_pw")
+            login_pw = st.text_input(
+                "비밀번호", type="password", key="login_pw"
+            )
 
             if st.button("로그인", use_container_width=True, type="primary"):
                 hashed = hash_password(login_pw)
@@ -349,7 +408,7 @@ def auth_screen():
 
             if st.button("회원가입 완료", use_container_width=True):
                 if not new_id or not new_pw:
-                    st.warning("아이디와 비밀번호를 모두 입력해주세요.")
+                    st.warning("아이디와 비밀번호를 입력해주세요.")
                 elif new_id in users:
                     st.warning("이미 존재하는 아이디입니다.")
                 elif new_pw != new_pw_confirm:
@@ -362,10 +421,12 @@ def auth_screen():
                     )
 
 
-# 5. 메인 앱 대시보드
+# ---------------------------------------------------------
+# 5. 메인 대시보드
+# ---------------------------------------------------------
 def main_app():
-    st.sidebar.title("🎛️ 공간 옵션 설정")
-    st.sidebar.write(f"👤 **{st.session_state['username']}** 님")
+    st.sidebar.title("🎛️ 커스텀 공간 커스텀 설정")
+    st.sidebar.write(f"👤 사용자: **{st.session_state['username']}**")
 
     if st.sidebar.button("🚪 로그아웃", use_container_width=True):
         st.session_state["logged_in"] = False
@@ -373,154 +434,210 @@ def main_app():
         st.rerun()
 
     st.sidebar.markdown("---")
-    venue_shape = st.sidebar.selectbox(
-        "장소 형태", ["직사각형", "정사각형", "L자형"]
+
+    # [옵션 그룹 1] 기본 공간 구조
+    st.sidebar.subheader("1. 공간 구조 및 규모")
+    shape = st.sidebar.selectbox(
+        "장소 형태", ["직사각형", "정사각형", "L자형", "U자형"]
     )
-    event_type = st.sidebar.selectbox(
-        "행사 유형", ["세미나/강연", "연회/파티", "전시회"]
+    width = st.sidebar.slider(
+        "가로 길이 (m)", min_value=10, max_value=50, value=25
     )
-    attendees = st.sidebar.slider(
-        "참석 인원 수", min_value=10, max_value=300, value=80, step=10
+    height = st.sidebar.slider(
+        "세로 길이 (m)", min_value=10, max_value=50, value=20
+    )
+    attendees = st.sidebar.number_input(
+        "목표 참석 인원 (명)", min_value=10, max_value=300, value=80, step=10
     )
 
-    st.sidebar.markdown("---")
-    include_vip = st.sidebar.checkbox("👑 VIP 라운지 포함", value=True)
-    include_catering = st.sidebar.checkbox("☕ 케이터링 존 포함", value=True)
+    # [옵션 그룹 2] 배치 스타일
+    st.sidebar.subheader("2. 내부 배치 모드")
+    layout_style = st.sidebar.selectbox(
+        "좌석 및 부스 배치",
+        [
+            "강의식 (Theater)",
+            "연회식 (Round Table)",
+            "전시 부스 (Exhibition)",
+            "ㄷ자형 회의 (U-Shape)",
+        ],
+    )
+    stage_pos = st.sidebar.selectbox(
+        "메인 무대 위치", ["상단", "중앙", "좌측", "없음"]
+    )
 
-    # 지표 요약 대시보드
-    st.title("📊 Vibe Venue - 통합 공간 관리 대시보드")
+    # [옵션 그룹 3] 부속 구역 토글
+    st.sidebar.subheader("3. 부속 구역 옵션")
+    show_reg_desk = st.sidebar.checkbox("📋 안내/등록 데스크", value=True)
+    restroom_pos = st.sidebar.selectbox(
+        "🚻 화장실 위치", ["우측 하단", "좌측 하단", "외부/없음"]
+    )
+    show_vip = st.sidebar.checkbox("👑 VIP 라운지", value=True)
+    show_catering = st.sidebar.checkbox("☕ 케이터링 & 바", value=True)
+    show_photo = st.sidebar.checkbox("📸 포토존 / 이벤트 존", value=False)
+    show_control = st.sidebar.checkbox("🜲 음향/조명 제어석", value=True)
 
-    m1, m2, m3, m4 = st.columns(4)
-    total_area = 500 if venue_shape != "L자형" else 375
-    m1.metric("총 공간 면적", f"{total_area} ㎡")
-    m2.metric("예상 참석 인원", f"{attendees} 명")
-    m3.metric("밀도 지수", f"{round(attendees / (total_area / 100), 1)} 명/100㎡")
-    m4.metric("비상 대피로", "🟢 3개소 확보")
+    # [옵션 그룹 4] 시각화 및 테마
+    st.sidebar.subheader("4. 도면 시각화 설정")
+    show_routes = st.sidebar.checkbox("🚨 동선 및 비상구 표시", value=True)
+    show_grid = st.sidebar.checkbox("📐 모눈종이 그리드", value=True)
+    theme = st.sidebar.selectbox(
+        "🎨 도면 테마", ["Dark Tech", "Blueprint", "Modern Light"]
+    )
+
+    # 옵션 딕셔너리 구성
+    opts = {
+        "shape": shape,
+        "width": width,
+        "height": height,
+        "attendees": attendees,
+        "layout_style": layout_style,
+        "stage_pos": stage_pos,
+        "show_reg_desk": show_reg_desk,
+        "restroom_pos": restroom_pos,
+        "show_vip": show_vip,
+        "show_catering": show_catering,
+        "show_photo": show_photo,
+        "show_control": show_control,
+        "show_routes": show_routes,
+        "show_grid": show_grid,
+        "theme": theme,
+    }
+
+    # 대시보드 상단 요약
+    st.title("🏛️ Pro 공간 설계 & 배치 대시보드")
+
+    area = width * height
+    if shape == "L자형":
+        area *= 0.75
+    elif shape == "U자형":
+        area *= 0.70
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("📐 총 면적", f"{int(area)} ㎡ ({int(area*0.3025)}평)")
+    col2.metric("👥 계획 인원", f"{attendees} 명")
+    col3.metric("📏 1인당 점유 면적", f"{round(area/attendees, 2)} ㎡/명")
+    col4.metric(
+        "🛡️ 안전 기준",
+        "🟢 적합" if (area / attendees) >= 1.2 else "🔴 혼잡 우려",
+    )
 
     st.markdown("---")
 
-    # 탭 구성
+    # 메인 탭
     tab1, tab2, tab3 = st.tabs(
-        ["🗺️ 상세 평면도", "📈 공간 점유율 분석", "📋 구역 명세서"]
+        [
+            "🗺️ 건축형 평면 도면",
+            "📊 공간 활용도 분석",
+            "📋 구역 및 장비 명세",
+        ]
     )
 
     with tab1:
-        col_map, col_legend = st.columns([3, 1])
-        with col_map:
-            fig_plan = create_advanced_floor_plan(
-                venue_shape,
-                event_type,
-                attendees,
-                include_vip,
-                include_catering,
-            )
-            st.plotly_chart(fig_plan, use_container_width=True)
-
-        with col_legend:
-            st.markdown("### 💡 주요 구역 범례")
-            st.markdown(
-                """
-            - **🚪 메인 입구**: 출입 및 안내
-            - **🚻 화장실**: 남/여/장애인 (우측 하단)
-            - **🚨 비상구**: 총 3개소 (좌/우/상단)
-            """
-            )
-            if include_catering:
-                st.markdown("- **☕ 케이터링**: 다과 및 스낵존")
-            if include_vip:
-                st.markdown("- **👑 VIP 라운지**: 귀빈 전용 대기실")
+        fig = draw_pro_floor_plan(opts)
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
         c1, c2 = st.columns(2)
         with c1:
-            st.subheader("📊 구역별 면적 점유율")
+            st.subheader("💡 구역별 면적 배분")
             df_pie = pd.DataFrame(
                 {
                     "구역": [
-                        "메인 이벤트존",
-                        "통로 및 이동 동선",
-                        "화장실 및 안내데스크",
-                        "편의시설",
+                        "메인 행사장",
+                        "통로 및 동선",
+                        "부속 편의시설",
+                        "여유 공간",
                     ],
-                    "비율": [50, 25, 15, 10],
+                    "비율": [55, 25, 12, 8],
                 }
             )
             fig_pie = px.pie(
                 df_pie,
                 names="구역",
                 values="비율",
-                color_discrete_sequence=px.colors.sequential.Darkmint,
+                color_discrete_sequence=px.colors.qualitative.Set3,
             )
             st.plotly_chart(fig_pie, use_container_width=True)
 
         with c2:
-            st.subheader("⏱️ 시간대별 예상 혼잡도")
+            st.subheader("⏱️ 시간대별 예상 이동 인량")
             df_bar = pd.DataFrame(
                 {
-                    "시간대": ["09:00", "11:00", "13:00", "15:00", "17:00"],
-                    "혼잡도(%)": [30, 85, 60, 95, 40],
+                    "시간": [
+                        "행사 1시간 전",
+                        "개회 직전",
+                        "메인 세션",
+                        "휴식 시간",
+                        "종료 후",
+                    ],
+                    "유입 인원(명)": [
+                        int(attendees * 0.2),
+                        int(attendees * 0.8),
+                        attendees,
+                        int(attendees * 0.9),
+                        int(attendees * 0.3),
+                    ],
                 }
             )
             fig_bar = px.bar(
                 df_bar,
-                x="시간대",
-                y="혼잡도(%)",
-                color="혼잡도(%)",
-                color_continuous_scale="Reds",
+                x="시간",
+                y="유입 인원(명)",
+                color="유입 인원(명)",
+                color_continuous_scale="Viridis",
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
     with tab3:
-        st.subheader("📋 전체 구역 세부 명세")
-        table_data = [
+        st.subheader("📋 구역 배치 상세 명세서")
+        specs = [
             {
-                "구역": "메인존",
-                "위치": "중앙/상단",
-                "수용 인원": f"최대 {attendees}명",
-                "설비": "무대, 음향, 대형 스크린",
+                "구역명": "메인 이벤트존",
+                "배치 유형": layout_style,
+                "권장 수용": f"{attendees}명",
+                "비고": f"무대 위치: {stage_pos}",
             },
             {
-                "구역": "안내 데스크",
-                "위치": "하단 입구",
-                "수용 인원": "운영진 4~6명",
-                "설비": "태블릿 등록기, 안내 배너",
-            },
-            {
-                "구역": "화장실",
-                "위치": "하단 우측",
-                "수용 인원": "동시 10명",
-                "설비": "남/여 구분 세면대",
-            },
-            {
-                "구역": "비상구",
-                "위치": "좌/우/상단 3곳",
-                "수용 인원": "대피용",
-                "설비": "유도등, 소화기",
+                "구역명": "안내/등록 데스크",
+                "배치 유형": "출입구 직련",
+                "권장 수용": "4명",
+                "비고": "등록 태블릿 및 명찰 배부",
             },
         ]
-        if include_catering:
-            table_data.append(
+        if show_vip:
+            specs.append(
                 {
-                    "구역": "케이터링존",
-                    "위치": "하단 좌측",
-                    "수용 인원": "15명",
-                    "설비": "커피머신, 정수기, 바 테이블",
+                    "구역명": "VIP 라운지",
+                    "배치 유형": "독립 구획",
+                    "권장 수용": "8~10명",
+                    "비고": "고급 소파 및 음료 서비스",
                 }
             )
-        if include_vip:
-            table_data.append(
+        if show_catering:
+            specs.append(
                 {
-                    "구역": "VIP 라운지",
-                    "위치": "상단 좌측",
-                    "수용 인원": "10명",
-                    "설비": "고급 소파, 독립 방음 벽체",
+                    "구역명": "케이터링 존",
+                    "배치 유형": "스탠딩 테이블",
+                    "권장 수용": "15명 동시",
+                    "비고": "다과 및 머신 배치",
+                }
+            )
+        if show_control:
+            specs.append(
+                {
+                    "구역명": "음향/조명 제어석",
+                    "배치 유형": "콘솔 테이블",
+                    "권장 수용": "2명 엔지니어",
+                    "비고": "무대 직시 가능 위치",
                 }
             )
 
-        st.dataframe(pd.DataFrame(table_data), use_container_width=True)
+        st.dataframe(pd.DataFrame(specs), use_container_width=True)
 
 
+# ---------------------------------------------------------
 # 6. 진입점
+# ---------------------------------------------------------
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
