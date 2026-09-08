@@ -1,3 +1,14 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Streamlit 페이지 설정
+st.set_page_config(
+    page_title="인터랙티브 행사장 도면 제작기",
+    layout="wide"
+)
+
+# HTML/CSS/JS 코드 전체를 문자열로 전달
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -22,7 +33,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
@@ -33,9 +44,8 @@
       overflow: hidden;
     }
 
-    /* Sidebar Styling */
     .sidebar {
-      width: 360px;
+      width: 340px;
       background-color: var(--bg-secondary);
       border-right: 1px solid var(--border-color);
       display: flex;
@@ -46,7 +56,7 @@
     }
 
     .section-title {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: #60a5fa;
       border-bottom: 2px solid var(--border-color);
@@ -195,7 +205,6 @@
       color: #34d399;
     }
 
-    /* Main Area / Canvas Styling */
     .main-area {
       flex: 1;
       display: flex;
@@ -232,7 +241,6 @@
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
     }
 
-    /* Floor Plan Elements */
     .placed-element {
       position: absolute;
       border: 2px solid rgba(255, 255, 255, 0.8);
@@ -270,7 +278,6 @@
       display: block;
     }
 
-    /* Traffic Flow SVG Overlay */
     .traffic-svg {
       position: absolute;
       top: 0;
@@ -305,11 +312,9 @@
 </head>
 <body>
 
-  <!-- Sidebar Control Panel -->
   <div class="sidebar">
-    <h2 style="font-size: 1.2rem; font-weight: 800; color: #fff;">🏛️ 행사장 도면 제작기</h2>
+    <h2 style="font-size: 1.1rem; font-weight: 800; color: #fff;">🏛️ 행사장 도면 제작기</h2>
 
-    <!-- 1. Mode Selection -->
     <div>
       <div class="section-title">행사 유형 선택</div>
       <div class="mode-toggle">
@@ -318,7 +323,6 @@
       </div>
     </div>
 
-    <!-- 2. Event Options -->
     <div>
       <div class="section-title">행사 기본 정보</div>
       <div class="form-group">
@@ -334,16 +338,15 @@
         <input type="number" id="ticket-fee" value="10000" min="0" step="500" oninput="updateStats()">
       </div>
       <div class="form-group">
-        <label for="extra-reqs">추가 요구 사항 (전력/음향/위생 등)</label>
-        <textarea id="extra-reqs" placeholder="예: 메인무대 220V 10kW 인입 필요, 비상구 경로 확보, 음향 제어 부스 전원 연동"></textarea>
+        <label for="extra-reqs">추가 요구 사항</label>
+        <textarea id="extra-reqs" placeholder="예: 메인무대 220V 전원 인입, 비상구 경로 확보"></textarea>
       </div>
     </div>
 
-    <!-- 3. Traffic Flow Toggle -->
     <div>
       <div class="section-title">동선 및 안전 관리</div>
       <div class="toggle-container">
-        <span style="font-size: 0.9rem; font-weight: 600;">최적 이동 경로 표시</span>
+        <span style="font-size: 0.85rem; font-weight: 600;">최적 이동 경로 표시</span>
         <label class="switch">
           <input type="checkbox" id="traffic-toggle" onchange="toggleTrafficFlow(this.checked)">
           <span class="slider"></span>
@@ -351,15 +354,11 @@
       </div>
     </div>
 
-    <!-- 4. Element Palette -->
     <div>
       <div class="section-title">요소 추가</div>
-      <div class="palette-grid" id="palette-buttons">
-        <!-- Dynamic Palette Buttons -->
-      </div>
+      <div class="palette-grid" id="palette-buttons"></div>
     </div>
 
-    <!-- 5. Selected Element Controller -->
     <div id="inspector-panel" style="display: none;">
       <div class="section-title">선택된 요소 설정</div>
       <div class="form-group">
@@ -369,7 +368,6 @@
       <button style="background-color: #ef4444; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600;" onclick="deleteSelectedElement()">🗑️ 삭제하기</button>
     </div>
 
-    <!-- 6. Summary Stats -->
     <div>
       <div class="section-title">실시간 산출 정보</div>
       <div class="stats-card">
@@ -380,7 +378,6 @@
     </div>
   </div>
 
-  <!-- Main Canvas Area -->
   <div class="main-area">
     <div class="toolbar">
       <span id="current-mode-label" style="font-weight: 700; color: #93c5fd;">모드: 실내 컨벤션 홀</span>
@@ -388,10 +385,8 @@
     </div>
 
     <div class="canvas-container" id="canvas">
-      <!-- Traffic Overlay Layer -->
       <svg class="traffic-svg" id="traffic-svg">
         <path class="flow-path" id="flow-path-1" d="M 80,500 C 200,450 250,250 450,250 C 650,250 700,450 850,150" />
-        <!-- Node Points -->
         <circle class="flow-node" cx="80" cy="500" r="8" />
         <circle class="flow-node" cx="450" cy="250" r="8" />
         <circle class="flow-node" cx="850" cy="150" r="8" />
@@ -403,7 +398,6 @@
   </div>
 
   <script>
-    // App State
     let currentMode = 'indoor';
     let elements = [];
     let selectedElementId = null;
@@ -435,13 +429,11 @@
 
     const canvas = document.getElementById('canvas');
 
-    // Initialize App
     function init() {
       renderPalette();
       loadDefaultPresets();
       updateStats();
 
-      // Deselect when clicking canvas background
       canvas.addEventListener('mousedown', (e) => {
         if (e.target === canvas || e.target.id === 'traffic-svg') {
           selectElement(null);
@@ -452,7 +444,6 @@
       window.addEventListener('mouseup', handleMouseUp);
     }
 
-    // Set Indoor / Outdoor Mode
     function setEventMode(mode) {
       currentMode = mode;
       document.getElementById('btn-indoor').classList.toggle('active', mode === 'indoor');
@@ -474,7 +465,6 @@
       loadDefaultPresets();
     }
 
-    // Render Palette Buttons
     function renderPalette() {
       const container = document.getElementById('palette-buttons');
       container.innerHTML = '';
@@ -488,28 +478,26 @@
       });
     }
 
-    // Add Preset Elements
     function loadDefaultPresets() {
       if (currentMode === 'indoor') {
-        addElement('메인 무대', '#6366f1', 240, 100, 300, 50);
-        addElement('전시 부스 A', '#0ea5e9', 100, 100, 180, 220);
-        addElement('전시 부스 B', '#0ea5e9', 100, 100, 320, 220);
-        addElement('안내 데스크', '#10b981', 140, 60, 50, 480);
-        addElement('비상구', '#ef4444', 80, 40, 800, 100);
+        addElement('메인 무대', '#6366f1', 240, 100, 250, 40);
+        addElement('전시 부스 A', '#0ea5e9', 100, 100, 120, 200);
+        addElement('전시 부스 B', '#0ea5e9', 100, 100, 250, 200);
+        addElement('안내 데스크', '#10b981', 140, 60, 40, 420);
+        addElement('비상구', '#ef4444', 80, 40, 600, 80);
       } else {
-        addElement('야외 메인무대', '#4f46e5', 280, 120, 280, 40);
-        addElement('푸드트럭 01', '#f59e0b', 110, 70, 120, 240);
-        addElement('푸드트럭 02', '#f59e0b', 110, 70, 120, 330);
-        addElement('몽골텐트 A', '#10b981', 90, 90, 480, 240);
-        addElement('의무실 텐트', '#ec4899', 90, 70, 750, 120);
+        addElement('야외 메인무대', '#4f46e5', 260, 120, 220, 30);
+        addElement('푸드트럭 01', '#f59e0b', 110, 70, 80, 220);
+        addElement('푸드트럭 02', '#f59e0b', 110, 70, 80, 310);
+        addElement('몽골텐트 A', '#10b981', 90, 90, 400, 220);
+        addElement('의무실 텐트', '#ec4899', 90, 70, 600, 100);
       }
     }
 
-    // Add Element to Canvas
     function addElement(label, color, w = 100, h = 80, customX, customY) {
       const id = 'elem_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      const x = customX !== undefined ? customX : Math.floor(Math.random() * 200) + 100;
-      const y = customY !== undefined ? customY : Math.floor(Math.random() * 200) + 100;
+      const x = customX !== undefined ? customX : Math.floor(Math.random() * 150) + 80;
+      const y = customY !== undefined ? customY : Math.floor(Math.random() * 150) + 80;
 
       const elementData = { id, label, color, x, y, width: w, height: h };
       elements.push(elementData);
@@ -519,7 +507,6 @@
       updateStats();
     }
 
-    // Render Single Element Node
     function renderElementNode(data) {
       const node = document.createElement('div');
       node.className = 'placed-element';
@@ -539,7 +526,6 @@
       handle.className = 'resize-handle';
       node.appendChild(handle);
 
-      // Mouse Events
       node.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         selectElement(data.id);
@@ -560,7 +546,6 @@
       canvas.appendChild(node);
     }
 
-    // Handle Mouse Move for Dragging and Resizing
     function handleMouseMove(e) {
       if (!selectedElementId) return;
       const elemData = elements.find(el => el.id === selectedElementId);
@@ -570,7 +555,6 @@
         let newX = e.clientX - dragOffsetX;
         let newY = e.clientY - dragOffsetY;
 
-        // Canvas Boundary Limit
         const canvasRect = canvas.getBoundingClientRect();
         newX = Math.max(0, Math.min(newX, canvasRect.width - elemData.width));
         newY = Math.max(0, Math.min(newY, canvasRect.height - elemData.height));
@@ -597,13 +581,11 @@
       }
     }
 
-    // Handle Mouse Up
     function handleMouseUp() {
       isDragging = false;
       isResizing = false;
     }
 
-    // Select Element
     function selectElement(id) {
       selectedElementId = id;
       document.querySelectorAll('.placed-element').forEach(el => {
@@ -622,7 +604,6 @@
       }
     }
 
-    // Update Selected Element Label
     function updateSelectedElement() {
       if (!selectedElementId) return;
       const elemData = elements.find(el => el.id === selectedElementId);
@@ -636,7 +617,6 @@
       }
     }
 
-    // Delete Selected Element
     function deleteSelectedElement() {
       if (!selectedElementId) return;
       elements = elements.filter(el => el.id !== selectedElementId);
@@ -646,7 +626,6 @@
       updateStats();
     }
 
-    // Clear Canvas
     function clearCanvas() {
       elements = [];
       document.querySelectorAll('.placed-element').forEach(node => node.remove());
@@ -654,13 +633,11 @@
       updateStats();
     }
 
-    // Toggle Traffic Flow Overlay
     function toggleTrafficFlow(show) {
       const svg = document.getElementById('traffic-svg');
       svg.style.display = show ? 'block' : 'none';
     }
 
-    // Update Statistics
     function updateStats() {
       const capacity = parseInt(document.getElementById('expected-capacity').value) || 0;
       const fee = parseInt(document.getElementById('ticket-fee').value) || 0;
@@ -668,14 +645,16 @@
       const totalRevenue = capacity * fee;
       document.getElementById('stat-revenue').innerText = totalRevenue.toLocaleString() + ' 원';
 
-      // Rough area calculation (Assume Canvas = 1000m²)
       const density = (capacity / 1000).toFixed(2);
       document.getElementById('stat-density').innerText = density + ' 명/m²';
       document.getElementById('stat-count').innerText = elements.length + ' 개';
     }
 
-    // Run Init on Load
     window.onload = init;
   </script>
 </body>
 </html>
+"""
+
+# Streamlit 내부에 렌더링
+components.html(html_code, height=850, scrolling=False)
