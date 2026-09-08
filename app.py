@@ -40,7 +40,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
   background:#f1f5f9;
 }
 
-/* Sidebar - Deep Navy Dark Theme */
+/* Sidebar */
 .sidebar{
   width:240px;
   background:#0f172a;
@@ -156,7 +156,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 .page-view{display:none;}
 .page-view.active{display:block;}
 
-/* Form Card (Home Input) */
+/* Form Card */
 .form-card{
   background:#ffffff;
   border:1px solid #e2e8f0;
@@ -223,7 +223,49 @@ button{cursor:pointer;transition:all 0.2s ease;}
 }
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,0.4);}
 
-/* Dashboard Header Info Strip (Matching Screenshot) */
+.btn-secondary{
+  background:#f1f5f9;
+  color:#334155;
+  border:1px solid #cbd5e1;
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:11.5px;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.btn-secondary:hover{background:#e2e8f0;}
+
+.btn-warning{
+  background:#fef3c7;
+  color:#b45309;
+  border:1px solid #fde68a;
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:11.5px;
+  font-weight:700;
+}
+.btn-warning.active{background:#f59e0b;color:#fff;border-color:#d97706;}
+
+.btn-danger{
+  background:#fee2e2;
+  color:#b91c1c;
+  border:1px solid #fca5a5;
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:11.5px;
+  font-weight:700;
+}
+.btn-danger.active{background:#ef4444;color:#fff;border-color:#dc2626;animation:pulse 1s infinite;}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Info Strip */
 .info-strip{
   background:#ffffff;
   border:1px solid #e2e8f0;
@@ -303,7 +345,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
   font-weight:700;
 }
 
-/* Canvas Wrap (Digital Twin Outdoor Map) */
+/* Canvas Wrap */
 .map-wrap{
   position:relative;
   width:100%;
@@ -322,7 +364,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 #heatmapCanvas{z-index:5;opacity:0.85;pointer-events:none;}
 #peopleCanvas{z-index:10;pointer-events:none;}
 
-/* Map Overlay Legend (Matches image) */
+/* Map Overlay Legend */
 .map-legend-overlay{
   position:absolute;
   left:10px;
@@ -342,6 +384,38 @@ button{cursor:pointer;transition:all 0.2s ease;}
 .legend-item{display:flex;align-items:center;gap:5px;font-weight:700;color:#334155;}
 .legend-dot{width:8px;height:8px;border-radius:2px;}
 
+/* Controls Bar above/below Map */
+.map-controls-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* History Toolbar */
+.history-bar{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  padding:8px 12px;
+  border-radius:10px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:12px;
+}
+.history-select{
+  padding:4px 8px;
+  border:1px solid #cbd5e1;
+  border-radius:6px;
+  font-size:11.5px;
+  font-weight:700;
+  background:#fff;
+  color:#0f172a;
+}
+
 /* Score Table */
 .score-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}
 .score-tbl th,.score-tbl td{padding:8px 6px;text-align:left;border-bottom:1px solid #f1f5f9;}
@@ -355,6 +429,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 }
 .gb-excel{background:#dcfce7;color:#15803d;}
 .gb-good{background:#e0f2fe;color:#0369a1;}
+.gb-warn{background:#fef3c7;color:#b45309;}
 
 /* AI Recommendations list */
 .ai-recom-list{
@@ -397,7 +472,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 .text-red{color:#ef4444;}
 .text-green{color:#10b981;}
 
-/* Workflow Steps (Matching Image) */
+/* Workflow Steps */
 .wf-container{
   display:flex;
   align-items:center;
@@ -476,7 +551,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
 
 <div class="app-container">
 
-  <!-- SIDEBAR (Matches Image Dark Theme) -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-icon">✦</div>
@@ -532,7 +607,7 @@ button{cursor:pointer;transition:all 0.2s ease;}
       </button>
     </header>
 
-    <!-- PAGE 1: HOME (EXTENDED INPUT FORM) -->
+    <!-- PAGE 1: HOME -->
     <section id="pageHome" class="page-view">
       <div class="form-card">
         <div class="form-section-head">📝 행사 기본 정보 및 상세 요구사항 설정</div>
@@ -626,10 +701,21 @@ button{cursor:pointer;transition:all 0.2s ease;}
       </div>
     </section>
 
-    <!-- PAGE 2: DESIGN DASHBOARD (MATCHES IMAGE EXACTLY) -->
+    <!-- PAGE 2: DESIGN DASHBOARD -->
     <section id="pageDesign" class="page-view active">
 
-      <!-- Top Header Strip "행사 기본 정보" -->
+      <!-- History Bar -->
+      <div class="history-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span>📜 <b>설계 히스토리 (기록):</b></span>
+          <select id="historySelect" class="history-select" onchange="loadSelectedHistory(this.value)">
+            <!-- Dynamic Options -->
+          </select>
+        </div>
+        <span id="historyStatusBadge" style="font-size:11px;color:#2563eb;font-weight:700;">현재 버전: v1 (기본 설계안)</span>
+      </div>
+
+      <!-- Top Header Strip -->
       <div class="info-strip">
         <div class="info-strip-group">
           <div class="info-box">
@@ -682,13 +768,13 @@ button{cursor:pointer;transition:all 0.2s ease;}
         <div class="card-panel">
           <div class="card-head">
             <span>🗺️ 행사장 배치도 (디지털 트윈 렌더링)</span>
-            <span class="card-badge">3D 실사 모드</span>
+            <span class="card-badge" id="layoutBadge">v1.0 AI 설계</span>
           </div>
           <div class="map-wrap" id="mapWrap">
             <canvas id="venueCanvas"></canvas>
             <canvas id="peopleCanvas"></canvas>
 
-            <!-- Overlay Legend Box (Matching Screenshot) -->
+            <!-- Legend -->
             <div class="map-legend-overlay">
               <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6;"></span> 무대존</div>
               <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> 체험존</div>
@@ -700,19 +786,27 @@ button{cursor:pointer;transition:all 0.2s ease;}
             </div>
           </div>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-            <button style="background:#334155;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;" onclick="toggleSim()">
-              ▶ 동선 시뮬레이션
-            </button>
-            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">시뮬레이션 상태: 대기중</span>
+          <div class="map-controls-bar">
+            <div style="display:flex;gap:6px;">
+              <button class="btn-secondary" id="btnToggleSim" onclick="toggleSim()">
+                ▶ 시뮬레이션 시작
+              </button>
+              <button class="btn-warning" id="btnRain" onclick="toggleRainEnv()">
+                🌧️ 우천 모드
+              </button>
+              <button class="btn-danger" id="btnEmergency" onclick="triggerEmergencyEnv()">
+                🚨 응급환자 발생
+              </button>
+            </div>
+            <span style="font-size:11px;color:#64748b;font-weight:700;" id="simTimer">상태: 대기중</span>
           </div>
         </div>
 
         <!-- 2. Density Heatmap -->
         <div class="card-panel">
           <div class="card-head">
-            <span>🔥 혼잡도 Heatmap</span>
-            <span class="card-badge">실시간 감지</span>
+            <span>🔥 실시간 군중 밀집도 Heatmap</span>
+            <span class="card-badge" id="envBadge">일반 상태</span>
           </div>
           <div class="map-wrap">
             <canvas id="heatmapCanvas"></canvas>
@@ -734,17 +828,17 @@ button{cursor:pointer;transition:all 0.2s ease;}
             <thead>
               <tr><th>평가 항목</th><th>점수</th><th>등급</th></tr>
             </thead>
-            <tbody>
-              <tr><td>비상 안전성</td><td>92점</td><td><span class="grade-badge gb-excel">매우 우수</span></td></tr>
-              <tr><td>동선 효율성</td><td>87점</td><td><span class="grade-badge gb-good">우수</span></td></tr>
-              <tr><td>접근성</td><td>96점</td><td><span class="grade-badge gb-excel">매우 우수</span></td></tr>
-              <tr><td>혼잡도 분산</td><td>84점</td><td><span class="grade-badge gb-good">우수</span></td></tr>
-              <tr><td>공간 활용성</td><td>88점</td><td><span class="grade-badge gb-good">우수</span></td></tr>
+            <tbody id="evalScoreTable">
+              <tr><td>비상 안전성</td><td id="scSafety">92점</td><td><span class="grade-badge gb-excel" id="gbSafety">매우 우수</span></td></tr>
+              <tr><td>동선 효율성</td><td id="scFlow">87점</td><td><span class="grade-badge gb-good" id="gbFlow">우수</span></td></tr>
+              <tr><td>접근성</td><td id="scAccess">96점</td><td><span class="grade-badge gb-excel" id="gbAccess">매우 우수</span></td></tr>
+              <tr><td>혼잡도 분산</td><td id="scCong">84점</td><td><span class="grade-badge gb-good" id="gbCong">우수</span></td></tr>
+              <tr><td>공간 활용성</td><td id="scSpace">88점</td><td><span class="grade-badge gb-good" id="gbSpace">우수</span></td></tr>
             </tbody>
           </table>
 
-          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:10px 0 6px 0;">💡 AI 개선 제안사항</div>
-          <ul class="ai-recom-list">
+          <div style="font-size:12px;font-weight:800;color:#0f172a;margin:10px 0 6px 0;">💡 AI 개선 및 맞춤 제안</div>
+          <ul class="ai-recom-list" id="aiRecomList">
             <li>공연 무대 전면 피크 시간대 차단봉 추가 설치로 우발 병목 해소</li>
             <li>응급 의료센터를 입구 근처로 이동시켜 비상 접근성 25% 개선</li>
             <li>체험존 주변을 원형으로 배치하여 관람객 이동 흐름 순환</li>
@@ -764,22 +858,22 @@ button{cursor:pointer;transition:all 0.2s ease;}
           </div>
           <div class="compare-grid">
             <div class="comp-col">
-              <h5>AI 설계 전 (기존 수동)</h5>
-              <div class="comp-val"><span>병목 발생율</span><span class="text-red">68%</span></div>
-              <div class="comp-val"><span>안전 접근성</span><span>65점</span></div>
-              <div class="comp-val"><span>사고 위험구역</span><span class="text-red">3개소</span></div>
+              <h5>AI 설계 전 (기존)</h5>
+              <div class="comp-val"><span>병목 발생율</span><span class="text-red" id="compBeforeBottleneck">68%</span></div>
+              <div class="comp-val"><span>안전 접근성</span><span id="compBeforeAccess">65점</span></div>
+              <div class="comp-val"><span>사고 위험구역</span><span class="text-red" id="compBeforeRisk">3개소</span></div>
             </div>
             <div style="text-align:center;font-weight:900;color:#cbd5e1;">→</div>
             <div class="comp-col">
-              <h5>AI 설계 후 (최적화 반영)</h5>
-              <div class="comp-val"><span>병목 발생율</span><span class="text-green">18%</span></div>
-              <div class="comp-val"><span>안전 접근성</span><span class="text-green">96점</span></div>
-              <div class="comp-val"><span>사고 위험구역</span><span class="text-green">0개소</span></div>
+              <h5>AI 설계 후 (최적화)</h5>
+              <div class="comp-val"><span>병목 발생율</span><span class="text-green" id="compAfterBottleneck">18%</span></div>
+              <div class="comp-val"><span>안전 접근성</span><span class="text-green" id="compAfterAccess">96점</span></div>
+              <div class="comp-val"><span>사고 위험구역</span><span class="text-green" id="compAfterRisk">0개소</span></div>
             </div>
           </div>
         </div>
 
-        <!-- 2. AI Workflow Process (Matching Image) -->
+        <!-- 2. AI Workflow Process -->
         <div class="card-panel">
           <div class="card-head">
             <span>⚙️ AI 행사 설계 프로세스 (Workflow)</span>
@@ -808,10 +902,10 @@ button{cursor:pointer;transition:all 0.2s ease;}
           <div class="card-head">
             <span>📄 분석 리포트 요약</span>
           </div>
-          <div class="report-sum-box">
+          <div class="report-sum-box" id="reportSummaryBox">
             AI 분석 결과, <b>2025 힐링 페스티벌</b>은 5,000명의 관람객을 안전하게 수용할 수 있는 최적 구조입니다.
           </div>
-          <button class="btn-primary" style="width:100%;justify-center;padding:10px;font-size:12px;margin-top:auto;" onclick="openReportModal()">
+          <button class="btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-top:auto;" onclick="openReportModal()">
             📌 이 설계안을 기반으로 상세 보고서 생성 (PDF)
           </button>
         </div>
@@ -826,8 +920,9 @@ button{cursor:pointer;transition:all 0.2s ease;}
         <div class="form-section-head">⚙️ AI 행사 공간 설계 및 시뮬레이션 메커니즘</div>
         <p style="font-size:13px;line-height:1.7;color:#334155;">
           1. <b>공간 파라미터 생성:</b> 입출구, 무대, 푸드존 등의 위치 데이터를 2D/3D 메시 그리드로 변환합니다.<br>
-          2. <b>다방향 군중 에이전트 시뮬레이션:</b> 관람객 5,000명의 목적지(공연 관람, 음식 구매, 휴식 등)에 따른 유동 경로를 기계학습으로 계산합니다.<br>
-          3. <b>안전 위험 지수 진단:</b> 밀집도 peak 시 ㎡당 인원수를 추정하여 소방 및 비상 대피 골든타임을 확보합니다.
+          2. <b>다방향 군중 에이전트 시뮬레이션:</b> 관람객 5,000명의 목적지(공연 관람, 음식 구매, 휴식 등)에 따른 유동 경로를 실시간 물리 엔진으로 연산합니다.<br>
+          3. <b>돌발 상황 및 우천 시뮬레이션:</b> 강우 시 피난 이동 속도 증가 및 응급환자 발생 시 골든타임 동선 확보 경로를 동적으로 검증합니다.<br>
+          4. <b>자동 히스토리 관리:</b> AI 재배치 시 이전의 설계를 자동으로 저장하여 언제든 버전별 비교가 가능합니다.
         </p>
       </div>
     </section>
@@ -838,11 +933,11 @@ button{cursor:pointer;transition:all 0.2s ease;}
         <div class="form-section-head">🤖 AI 실시간 레이아웃 대화형 어시스턴트</div>
         <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:10px;height:200px;overflow-y:auto;font-size:12px;margin-bottom:12px;" id="chatBox">
           <div style="color:#0369a1;background:#e0f2fe;padding:8px;border-radius:8px;margin-bottom:8px;">
-            AI: 안녕하세요 추천님! "무대를 오른쪽으로 이동해줘" 나 "휴식존을 더 넓혀줘" 와 같은 명령을 내려주시면 즉시 배치도에 반영합니다.
+            AI: 안녕하세요 추천님! "무대를 오른쪽으로 이동해줘", "우천 대비용 천막 추가해줘" 와 같은 명령을 내려주시면 즉시 배치도를 재생성하고 이전 기록에 저장합니다.
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="chatIn" placeholder="요구사항을 입력하세요..." style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
+          <input type="text" id="chatIn" placeholder="요구사항을 입력하세요... (예: 응급센터 통로를 확장해줘)" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
           <button class="btn-primary" onclick="sendChat()">전송</button>
         </div>
       </div>
@@ -862,25 +957,25 @@ button{cursor:pointer;transition:all 0.2s ease;}
     <div class="modal-body">
       <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
         <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">1. 종합 평가 요약</h4>
-        <p style="font-size:12.5px;color:#334155;line-height:1.6;">
+        <p style="font-size:12.5px;color:#334155;line-height:1.6;" id="modalSummaryText">
           본 보고서는 <b>2025 힐링 페스티벌</b> (야외 잔디 광장 50,000m², 예상 관람객 5,000명)의 안전 및 동선 최적화를 위해 생성되었습니다. AI 시뮬레이션 결과 종합 안전성 점수 <b>92점</b>, 동선 효율성 <b>87점</b>을 기록하였습니다.
         </p>
       </div>
 
       <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
         <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">2. 구역별 세부 설비 지침</h4>
-        <ul style="font-size:12px;color:#334155;line-height:1.7;padding-left:18px;">
-          <li><b>메인 무대:</b> 중앙 상단 잔디면 배치, 무대 앞 관람 구역 통로 폭 4m 확보.</li>
-          <li><b>응급 의료 센터:</b> 메인 출입구 우측 15m 지점 전진 배치, 앰뷸런스 전용 진출입로 확보.</li>
+        <ul style="font-size:12px;color:#334155;line-height:1.7;padding-left:18px;" id="modalDetailList">
+          <li><b>메인 무대:</b> 배치 구역 상단 잔디면, 전면 관람 구역 통로 폭 4m 확보.</li>
+          <li><b>응급 의료 센터:</b> 주출입구 인근 전진 배치, 앰뷸런스 전용 진출입로 확보.</li>
           <li><b>Central Lawn (휴식존):</b> 파라솔 및 파라솔 테이블 40개소 배치로 관람객 머무름 시간 분산.</li>
-          <li><b>푸드 존:</b> 잔디광장 외곽 통풍 구역에 푸드트럭 12대 일렬 배치.</li>
+          <li><b>푸드 존:</b> 잔디광장 외곽 통풍 구역에 푸드트럭 일렬 배치.</li>
         </ul>
       </div>
 
       <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">3. 비상 대피 및 소방 가이드라인</h4>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:8px;color:#1e293b;">3. 비상 대피 및 우천/응급 대응 시뮬레이션 분석</h4>
         <p style="font-size:12px;color:#334155;line-height:1.6;">
-          비상 상황 발생 시 사방 4개 출입구를 통해 관람객 전원이 <b>2분 10초</b> 이내에 전원 대피 가능합니다.
+          비상 및 응급 상황 발생 시 출입구를 통해 관람객 전원이 <b>2분 10초</b> 이내 대피 가능하며, 응급구조대의 현장 도달 골든타임(3분 이내)이 100% 확보됩니다.
         </p>
       </div>
     </div>
@@ -927,8 +1022,161 @@ function openReportModal(){ document.getElementById('reportModal').classList.add
 function closeReportModal(){ document.getElementById('reportModal').classList.remove('active'); }
 function openAuthModal(){ alert('로그아웃 되었습니다.'); }
 
-/* Update Dashboard with Form Inputs */
+/* APP STATE & BLUEPRINT HISTORY SYSTEM */
+let layoutHistory = [];
+let currentLayoutIndex = -1;
+
+// Default Base Layout Config
+const layoutPresets = [
+  {
+    versionName: "v1.0 - 기본 최적안",
+    timestamp: "방금 전",
+    booths: {
+      stage: {x: 0.38, y: 0.08, bw: 0.24, bh: 0.16, title: '메인 무대', color: '#8b5cf6', icon: '🎭'},
+      expA: {x: 0.12, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
+      expB: {x: 0.72, y: 0.22, bw: 0.16, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
+      food: {x: 0.10, y: 0.48, bw: 0.16, bh: 0.15, title: '푸드존', color: '#f59e0b', icon: '🍔'},
+      medical: {x: 0.72, y: 0.48, bw: 0.16, bh: 0.14, title: '응급 의료센터', color: '#ef4444', icon: '🏥'},
+      restroom: {x: 0.72, y: 0.70, bw: 0.14, bh: 0.12, title: '화장실', color: '#06b6d4', icon: '🚻'}
+    },
+    scores: { safety: 92, flow: 87, access: 96, cong: 84, space: 88 },
+    recoms: [
+      "공연 무대 전면 피크 시간대 차단봉 추가 설치로 우발 병목 해소",
+      "응급 의료센터를 입구 근처로 이동시켜 비상 접근성 25% 개선",
+      "체험존 주변을 원형으로 배치하여 관람객 이동 흐름 순환",
+      "화장실 수를 2개 추가 배치하여 대기 시간을 줄일 수 있습니다."
+    ],
+    comp: { beforeBtn: "68%", beforeAcc: "65점", beforeRisk: "3개소", afterBtn: "18%", afterAcc: "96점", afterRisk: "0개소" }
+  },
+  {
+    versionName: "v2.0 - 우천/골든타임 특화 안",
+    timestamp: "신규 생성",
+    booths: {
+      stage: {x: 0.35, y: 0.08, bw: 0.30, bh: 0.18, title: '메인 대형무대 (캐노피)', color: '#8b5cf6', icon: '🎪'},
+      expA: {x: 0.08, y: 0.25, bw: 0.20, bh: 0.14, title: '체험존 (실내 돔)', color: '#3b82f6', icon: '🧪'},
+      expB: {x: 0.72, y: 0.25, bw: 0.20, bh: 0.14, title: '휴식/우비 배포존', color: '#10b981', icon: '☂️'},
+      food: {x: 0.08, y: 0.52, bw: 0.20, bh: 0.15, title: '실내 푸드존', color: '#f59e0b', icon: '🍔'},
+      medical: {x: 0.42, y: 0.72, bw: 0.16, bh: 0.14, title: '응급 의료센터 (중앙)', color: '#ef4444', icon: '🏥'},
+      restroom: {x: 0.75, y: 0.72, bw: 0.16, bh: 0.12, title: '화장실/편의', color: '#06b6d4', icon: '🚻'}
+    },
+    scores: { safety: 98, flow: 91, access: 94, cong: 90, space: 85 },
+    recoms: [
+      "응급 의료센터를 주 출입로 및 중앙 사거리 전진 배치하여 접근성 극대화",
+      "우천 대비 우수 관로 확보 및 방수 캐노피 천막 확장 설치",
+      "중앙 통로 폭을 6m로 넓혀 비상 차량 전용 차선 통행 보장",
+      "배수 시설 근접 구역으로 푸드존 이동"
+    ],
+    comp: { beforeBtn: "55%", beforeAcc: "70점", beforeRisk: "2개소", afterBtn: "8%", afterAcc: "98점", afterRisk: "0개소" }
+  },
+  {
+    versionName: "v3.0 - 대형 관람객 군중 분산 안",
+    timestamp: "신규 생성",
+    booths: {
+      stage: {x: 0.38, y: 0.05, bw: 0.24, bh: 0.15, title: '메인 무대', color: '#8b5cf6', icon: '🎭'},
+      expA: {x: 0.05, y: 0.18, bw: 0.18, bh: 0.14, title: '체험존 A', color: '#3b82f6', icon: '🧪'},
+      expB: {x: 0.77, y: 0.18, bw: 0.18, bh: 0.14, title: '체험존 B', color: '#3b82f6', icon: '🚀'},
+      food: {x: 0.05, y: 0.65, bw: 0.18, bh: 0.15, title: '분산 푸드존 A', color: '#f59e0b', icon: '🍔'},
+      medical: {x: 0.77, y: 0.65, bw: 0.18, bh: 0.14, title: '응급 의료센터', color: '#ef4444', icon: '🏥'},
+      restroom: {x: 0.41, y: 0.72, bw: 0.18, bh: 0.12, title: '화장실 (중앙)', color: '#06b6d4', icon: '🚻'}
+    },
+    scores: { safety: 95, flow: 94, access: 92, cong: 95, space: 91 },
+    recoms: [
+      "외곽으로 주요 부스 분산 배치하여 중앙 광장 병목 현상 완벽 방지",
+      "화장실을 중앙에 배치하여 동서남북 어디서나 1분 이내 이용 가능",
+      "비상 대피로 4개 사방 통로 전면 개방 유지"
+    ],
+    comp: { beforeBtn: "40%", beforeAcc: "78점", beforeRisk: "1개소", afterBtn: "5%", afterAcc: "95점", afterRisk: "0개소" }
+  }
+];
+
+// Initialize history on start
+function initLayoutHistory() {
+  if (layoutHistory.length === 0) {
+    // Add default v1
+    layoutHistory.push(JSON.parse(JSON.stringify(layoutPresets[0])));
+    currentLayoutIndex = 0;
+    updateHistorySelectUI();
+  }
+}
+
+function updateHistorySelectUI() {
+  const sel = document.getElementById('historySelect');
+  if(!sel) return;
+  sel.innerHTML = '';
+  layoutHistory.forEach((ly, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${ly.versionName} (${ly.timestamp})`;
+    if (idx === currentLayoutIndex) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('historyStatusBadge').textContent = `현재 버전: ${layoutHistory[currentLayoutIndex].versionName}`;
+}
+
+function loadSelectedHistory(index) {
+  currentLayoutIndex = parseInt(index);
+  const layout = layoutHistory[currentLayoutIndex];
+
+  // Update UI Elements with history item data
+  document.getElementById('layoutBadge').textContent = layout.versionName;
+  document.getElementById('historyStatusBadge').textContent = `현재 버전: ${layout.versionName}`;
+
+  // Scores
+  document.getElementById('scSafety').textContent = layout.scores.safety + '점';
+  document.getElementById('scFlow').textContent = layout.scores.flow + '점';
+  document.getElementById('scAccess').textContent = layout.scores.access + '점';
+  document.getElementById('scCong').textContent = layout.scores.cong + '점';
+  document.getElementById('scSpace').textContent = layout.scores.space + '점';
+
+  // Recommendations
+  const recomUl = document.getElementById('aiRecomList');
+  recomUl.innerHTML = '';
+  layout.recoms.forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = r;
+    recomUl.appendChild(li);
+  });
+
+  // Comparisons
+  document.getElementById('compBeforeBottleneck').textContent = layout.comp.beforeBtn;
+  document.getElementById('compBeforeAccess').textContent = layout.comp.beforeAcc;
+  document.getElementById('compBeforeRisk').textContent = layout.comp.beforeRisk;
+  document.getElementById('compAfterBottleneck').textContent = layout.comp.afterBtn;
+  document.getElementById('compAfterAccess').textContent = layout.comp.afterAcc;
+  document.getElementById('compAfterRisk').textContent = layout.comp.afterRisk;
+
+  // Re-draw map canvas with loaded layout
+  if (venueCanvas) {
+    drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
+  }
+}
+
+/* AI Re-layout Trigger */
 function runAIGenerate(){
+  initLayoutHistory();
+
+  // Create a new version by selecting next preset or creating variation
+  const nextPresetIndex = layoutHistory.length % layoutPresets.length;
+  const newLayout = JSON.parse(JSON.stringify(layoutPresets[nextPresetIndex]));
+
+  const d = new Date();
+  const timeStr = `${d.getHours()}:${d.getMinutes() < 10 ? '0' : ''}${d.getMinutes()}:${d.getSeconds() < 10 ? '0' : ''}${d.getSeconds()}`;
+  newLayout.versionName = `v${layoutHistory.length + 1}.0 - AI 최적 재배치안`;
+  newLayout.timestamp = timeStr;
+
+  // Push into history stack (Saving previous blueprints!)
+  layoutHistory.push(newLayout);
+  currentLayoutIndex = layoutHistory.length - 1;
+
+  updateHistorySelectUI();
+  loadSelectedHistory(currentLayoutIndex);
+
+  switchPage('design', document.querySelectorAll('.nav-item')[1]);
+  alert(`✨ 새 AI 설계도가 생성되었습니다! 이전 설계도는 상단 '설계 히스토리' 기록에 안전하게 보관되었습니다.`);
+}
+
+/* Update Dashboard with Form Inputs */
+function updateDashboardInputs(){
   const name = document.getElementById('inEventName').value;
   const vtype = document.getElementById('inVenueType').value;
   const loc = document.getElementById('inLocation').value;
@@ -950,18 +1198,28 @@ function runAIGenerate(){
   document.getElementById('outCategory').textContent = cat;
   document.getElementById('outTicket').textContent = ticket;
   document.getElementById('outBudget').textContent = budget;
-
-  switchPage('design', document.querySelectorAll('.nav-item')[1]);
 }
 
-/* Detailed Graphic Lawn/Festival Canvas Rendering (Matches Screenshot Image Aesthetic) */
+/* Canvas & Real-time Active Simulation Engine */
 let venueCanvas, venueCtx;
 let peopleCanvas, peopleCtx;
 let heatmapCanvas, heatmapCtx;
+
 let simRunning = false;
+let animFrameId = null;
+
+let isRain = false;
+let isEmergency = false;
+let emergencyPos = null;
+
 let people = [];
+let raindrops = [];
+let medicalAgents = [];
 
 function initCanvases(){
+  initLayoutHistory();
+  updateDashboardInputs();
+
   venueCanvas = document.getElementById('venueCanvas');
   peopleCanvas = document.getElementById('peopleCanvas');
   heatmapCanvas = document.getElementById('heatmapCanvas');
@@ -982,19 +1240,164 @@ function initCanvases(){
   heatmapCtx = heatmapCanvas.getContext('2d');
 
   initPeopleData(w, h);
-  drawDetailedOutdoorVenue(w, h);
-  drawPeople(w, h);
-  drawHeatmap(w, h);
+  initRainData(w, h);
+  
+  loadSelectedHistory(currentLayoutIndex);
+
+  // Start Animation Render Loop
+  if (!animFrameId) {
+    renderLoop();
+  }
+}
+
+function initPeopleData(w, h){
+  people = [];
+  const count = 90; // Agent particles
+  for(let i=0; i<count; i++){
+    people.push({
+      x: w*0.1 + Math.random()*w*0.8,
+      y: h*0.15 + Math.random()*h*0.7,
+      vx: (Math.random()-0.5)*1.5,
+      vy: (Math.random()-0.5)*1.5,
+      targetX: Math.random()*w,
+      targetY: Math.random()*h,
+      speed: 0.8 + Math.random()*0.8,
+      color: '#ffffff'
+    });
+  }
+}
+
+function initRainData(w, h){
+  raindrops = [];
+  for(let i=0; i<120; i++){
+    raindrops.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      len: 8 + Math.random()*12,
+      vy: 6 + Math.random()*6
+    });
+  }
+}
+
+/* Simulation Physics & Agent Movement Update */
+function updateSimulationLogic(){
+  if(!venueCanvas) return;
+  const w = venueCanvas.width;
+  const h = venueCanvas.height;
+
+  const currentBooths = layoutHistory[currentLayoutIndex].booths;
+
+  // 1. Update People Behavior
+  people.forEach(p => {
+    // If Rain mode active: move faster towards stage canopy or gates/restrooms
+    if (isRain) {
+      const stage = currentBooths.stage;
+      const targetX = stage.x * w + stage.bw * w * 0.5;
+      const targetY = stage.y * h + stage.bh * h * 0.5;
+      p.vx += (targetX - p.x) * 0.0005;
+      p.vy += (targetY - p.y) * 0.0005;
+      p.speed = 2.2; // Move faster in rain
+    } 
+    // If Emergency mode active: evade emergency position
+    else if (isEmergency && emergencyPos) {
+      const dx = p.x - emergencyPos.x;
+      const dy = p.y - emergencyPos.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 100 && dist > 0) {
+        p.vx += (dx / dist) * 0.4; // Repelled from emergency
+        p.vy += (dy / dist) * 0.4;
+      }
+    } 
+    // Normal Wander Movement
+    else {
+      p.speed = 1.0;
+      if (Math.random() < 0.02) {
+        p.targetX = Math.random() * w;
+        p.targetY = Math.random() * h;
+      }
+      p.vx += (p.targetX - p.x) * 0.0002;
+      p.vy += (p.targetY - p.y) * 0.0002;
+    }
+
+    // Velocity Limit & Friction
+    const maxSpeed = p.speed;
+    const currentSpeed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+    if(currentSpeed > maxSpeed){
+      p.vx = (p.vx / currentSpeed) * maxSpeed;
+      p.vy = (p.vy / currentSpeed) * maxSpeed;
+    }
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // Boundaries bounce
+    if(p.x < 15) { p.x = 15; p.vx *= -1; }
+    if(p.x > w-15) { p.x = w-15; p.vx *= -1; }
+    if(p.y < 15) { p.y = 15; p.vy *= -1; }
+    if(p.y > h-15) { p.y = h-15; p.vy *= -1; }
+  });
+
+  // 2. Update Medical Agents when emergency active
+  if (isEmergency && emergencyPos && currentBooths.medical) {
+    const medX = currentBooths.medical.x * w + currentBooths.medical.bw * w * 0.5;
+    const medY = currentBooths.medical.y * h + currentBooths.medical.bh * h * 0.5;
+
+    if (medicalAgents.length === 0) {
+      medicalAgents = [
+        {x: medX, y: medY, vx: 0, vy: 0},
+        {x: medX + 10, y: medY + 10, vx: 0, vy: 0}
+      ];
+    }
+
+    medicalAgents.forEach(m => {
+      const dx = emergencyPos.x - m.x;
+      const dy = emergencyPos.y - m.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > 5) {
+        m.x += (dx / dist) * 3.5; // High speed ambulance / medics
+        m.y += (dy / dist) * 3.5;
+      }
+    });
+  }
+
+  // 3. Update Raindrops
+  if (isRain) {
+    raindrops.forEach(r => {
+      r.y += r.vy;
+      r.x -= 1;
+      if (r.y > h) { r.y = 0; r.x = Math.random() * w; }
+    });
+  }
+}
+
+/* Master Animation Render Loop */
+function renderLoop(){
+  if (simRunning) {
+    updateSimulationLogic();
+  }
+
+  if (peopleCanvas && venueCanvas) {
+    const w = venueCanvas.width;
+    const h = venueCanvas.height;
+
+    // Render Layers
+    drawPeople(w, h);
+    drawDynamicHeatmap(w, h);
+  }
+
+  animFrameId = requestAnimationFrame(renderLoop);
 }
 
 function drawDetailedOutdoorVenue(w, h){
-  if(!venueCtx) return;
+  if(!venueCtx || currentLayoutIndex < 0) return;
 
-  // Grass Lawn Texture Background
-  venueCtx.fillStyle = '#3a7d44'; // Lush outdoor grass green
+  const currentBooths = layoutHistory[currentLayoutIndex].booths;
+
+  // Background Grass Lawn Texture
+  venueCtx.fillStyle = isRain ? '#254e2b' : '#3a7d44'; // Darker grass if raining
   venueCtx.fillRect(0, 0, w, h);
 
-  // Outer Trees & Field Boundary Pattern
+  // Boundary Trees
   venueCtx.fillStyle = '#2d6135';
   for(let x=5; x<w; x+=25){
     venueCtx.beginPath(); venueCtx.arc(x, 8, 12, 0, Math.PI*2); venueCtx.fill();
@@ -1005,28 +1408,27 @@ function drawDetailedOutdoorVenue(w, h){
     venueCtx.beginPath(); venueCtx.arc(w-8, y, 12, 0, Math.PI*2); venueCtx.fill();
   }
 
-  // Gravel/Asphalt Pedestrian Pathways (Curved loop)
-  venueCtx.strokeStyle = '#e2d9c8'; // Gravel path color
-  venueCtx.lineWidth = 32;
+  // Pedestrian Pathways
+  venueCtx.strokeStyle = isRain ? '#b0a898' : '#e2d9c8';
+  venueCtx.lineWidth = 30;
   venueCtx.lineCap = 'round';
 
   venueCtx.beginPath();
-  venueCtx.moveTo(w*0.5, h*0.88); // Main Gate
-  venueCtx.lineTo(w*0.5, h*0.55); // Central
+  venueCtx.moveTo(w*0.5, h*0.88);
+  venueCtx.lineTo(w*0.5, h*0.55);
   venueCtx.stroke();
 
-  // Oval Loop around lawn
   venueCtx.beginPath();
   venueCtx.ellipse(w*0.5, h*0.5, w*0.38, h*0.3, 0, 0, Math.PI*2);
   venueCtx.stroke();
 
-  // Central Lawn (Rest Zone with Green Pitch + Umbrellas)
-  venueCtx.fillStyle = '#4fa15a';
+  // Central Lawn Rest Zone
+  venueCtx.fillStyle = isRain ? '#377341' : '#4fa15a';
   venueCtx.beginPath();
   venueCtx.ellipse(w*0.5, h*0.5, w*0.22, h*0.18, 0, 0, Math.PI*2);
   venueCtx.fill();
 
-  // Yellow Umbrellas on Lawn
+  // Umbrellas / Tents
   const umbrellaPositions = [
     {x: w*0.42, y: h*0.45}, {x: w*0.58, y: h*0.45},
     {x: w*0.45, y: h*0.55}, {x: w*0.55, y: h*0.55},
@@ -1039,24 +1441,13 @@ function drawDetailedOutdoorVenue(w, h){
     venueCtx.beginPath(); venueCtx.arc(u.x, u.y, 2.5, 0, Math.PI*2); venueCtx.fill();
   });
 
-  // Booth Structures
-  // 1. Stage (Purple/Blue Top Center)
-  drawGraphicBooth(venueCtx, w*0.38, h*0.08, w*0.24, h*0.16, '메인 무대', '#8b5cf6', '🎭');
+  // Render Layout Booths Dynamically from Active Blueprint
+  Object.keys(currentBooths).forEach(key => {
+    const b = currentBooths[key];
+    drawGraphicBooth(venueCtx, b.x*w, b.y*h, b.bw*w, b.bh*h, b.title, b.color, b.icon);
+  });
 
-  // 2. Experience Booths (Blue Top Left & Right)
-  drawGraphicBooth(venueCtx, w*0.12, h*0.22, w*0.16, h*0.14, '체험존 A', '#3b82f6', '🧪');
-  drawGraphicBooth(venueCtx, w*0.72, h*0.22, w*0.16, h*0.14, '체험존 B', '#3b82f6', '🚀');
-
-  // 3. Food Trucks (Yellow Middle Left)
-  drawGraphicBooth(venueCtx, w*0.10, h*0.48, w*0.16, h*0.15, '푸드존', '#f59e0b', '🍔');
-
-  // 4. Safety & Medical Center (Red Right Top)
-  drawGraphicBooth(venueCtx, w*0.72, h*0.48, w*0.16, h*0.14, '응급 의료센터', '#ef4444', '🏥');
-
-  // 5. Restroom / Facility (Cyan Bottom Right)
-  drawGraphicBooth(venueCtx, w*0.72, h*0.70, w*0.14, h*0.12, '화장실', '#06b6d4', '🚻');
-
-  // Gates (Main Entry Bottom)
+  // Gates
   venueCtx.fillStyle = '#1e293b';
   venueCtx.fillRect(w*0.42, h*0.86, w*0.16, h*0.08);
   venueCtx.fillStyle = '#ffffff';
@@ -1066,79 +1457,217 @@ function drawDetailedOutdoorVenue(w, h){
 }
 
 function drawGraphicBooth(ctx, x, y, bw, bh, title, color, icon){
-  // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.fillRect(x+3, y+3, bw, bh);
 
-  // Body Fill
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.roundRect(x, y, bw, bh, 6);
   ctx.fill();
 
-  // Border
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Text
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 10.5px Pretendard, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(`${icon} ${title}`, x + bw/2, y + bh/2 + 4);
 }
 
-function initPeopleData(w, h){
-  people = [];
-  for(let i=0; i<60; i++){
-    people.push({
-      x: w*0.5 + (Math.random()-0.5)*w*0.5,
-      y: h*0.5 + (Math.random()-0.5)*h*0.4,
-      vx: (Math.random()-0.5)*1.2,
-      vy: (Math.random()-0.5)*1.2
-    });
-  }
-}
-
 function drawPeople(w, h){
   if(!peopleCtx) return;
   peopleCtx.clearRect(0,0,w,h);
 
+  // Draw People Agents
   people.forEach(p => {
-    peopleCtx.fillStyle = '#ffffff';
+    peopleCtx.fillStyle = isRain ? '#60a5fa' : '#ffffff';
     peopleCtx.beginPath();
-    peopleCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
+    peopleCtx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
     peopleCtx.fill();
+    peopleCtx.strokeStyle = 'rgba(0,0,0,0.3)';
+    peopleCtx.lineWidth = 0.8;
+    peopleCtx.stroke();
   });
+
+  // Draw Emergency Effects & Medics
+  if (isEmergency && emergencyPos) {
+    // Red Flashing Beacon at Emergency Site
+    const time = Date.now() * 0.005;
+    const pulseR = 15 + Math.sin(time) * 10;
+    
+    peopleCtx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+    peopleCtx.beginPath();
+    peopleCtx.arc(emergencyPos.x, emergencyPos.y, pulseR + 10, 0, Math.PI*2);
+    peopleCtx.fill();
+
+    peopleCtx.fillStyle = '#ef4444';
+    peopleCtx.beginPath();
+    peopleCtx.arc(emergencyPos.x, emergencyPos.y, 8, 0, Math.PI*2);
+    peopleCtx.fill();
+
+    peopleCtx.fillStyle = '#ffffff';
+    peopleCtx.font = 'bold 10px Pretendard';
+    peopleCtx.textAlign = 'center';
+    peopleCtx.fillText('🚨 환자발생', emergencyPos.x, emergencyPos.y - 12);
+
+    // Draw Responding Medical Agents (Yellow/Red Crosses)
+    medicalAgents.forEach(m => {
+      peopleCtx.fillStyle = '#facc15';
+      peopleCtx.beginPath();
+      peopleCtx.arc(m.x, m.y, 6, 0, Math.PI*2);
+      peopleCtx.fill();
+      peopleCtx.fillStyle = '#000000';
+      peopleCtx.font = 'bold 8px Pretendard';
+      peopleCtx.fillText('🚑', m.x, m.y + 3);
+    });
+  }
+
+  // Draw Rain Effect Filter Overlay
+  if (isRain) {
+    peopleCtx.strokeStyle = 'rgba(147, 197, 253, 0.5)';
+    peopleCtx.lineWidth = 1.2;
+    raindrops.forEach(r => {
+      peopleCtx.beginPath();
+      peopleCtx.moveTo(r.x, r.y);
+      peopleCtx.lineTo(r.x - 2, r.y + r.len);
+      peopleCtx.stroke();
+    });
+  }
 }
 
-function drawHeatmap(w, h){
+function drawDynamicHeatmap(w, h){
   if(!heatmapCtx) return;
   heatmapCtx.clearRect(0,0,w,h);
 
-  // Render Red/Yellow hotspot spots
-  const hotspots = [
-    {x: w*0.5, y: h*0.18, r: 40}, // Stage crowd
-    {x: w*0.18, y: h*0.55, r: 35}, // Food zone crowd
-    {x: w*0.20, y: h*0.28, r: 30}  // Experience A
-  ];
+  // Compute Grid Density from Particle Coordinates dynamically
+  const grid = {};
+  const gridSize = 40;
 
-  hotspots.forEach(pt => {
-    let grad = heatmapCtx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, pt.r);
-    grad.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
-    grad.addColorStop(0.5, 'rgba(245, 158, 11, 0.4)');
-    grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+  people.forEach(p => {
+    const gx = Math.floor(p.x / gridSize);
+    const gy = Math.floor(p.y / gridSize);
+    const key = `${gx}_${gy}`;
+    grid[key] = (grid[key] || 0) + 1;
+  });
 
+  // Render Hotspots based on Real-time Particle Cluster Density
+  Object.keys(grid).forEach(key => {
+    const [gx, gy] = key.split('_').map(Number);
+    const count = grid[key];
+    const cx = gx * gridSize + gridSize/2;
+    const cy = gy * gridSize + gridSize/2;
+
+    if (count >= 2) {
+      let radius = count * 12;
+      let alpha = Math.min(0.8, count * 0.15);
+
+      let grad = heatmapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      if (count >= 6) {
+        grad.addColorStop(0, `rgba(239, 68, 68, ${alpha})`); // High Density Red
+        grad.addColorStop(0.5, `rgba(245, 158, 11, ${alpha*0.6})`);
+      } else {
+        grad.addColorStop(0, `rgba(245, 158, 11, ${alpha})`); // Medium Yellow
+        grad.addColorStop(0.5, `rgba(16, 185, 129, ${alpha*0.4})`);
+      }
+      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+      heatmapCtx.fillStyle = grad;
+      heatmapCtx.beginPath();
+      heatmapCtx.arc(cx, cy, radius, 0, Math.PI*2);
+      heatmapCtx.fill();
+    }
+  });
+
+  // Highlight Emergency Hotspot
+  if (isEmergency && emergencyPos) {
+    let grad = heatmapCtx.createRadialGradient(emergencyPos.x, emergencyPos.y, 0, emergencyPos.x, emergencyPos.y, 60);
+    grad.addColorStop(0, 'rgba(225, 29, 72, 0.9)');
+    grad.addColorStop(1, 'rgba(225, 29, 72, 0)');
     heatmapCtx.fillStyle = grad;
     heatmapCtx.beginPath();
-    heatmapCtx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
+    heatmapCtx.arc(emergencyPos.x, emergencyPos.y, 60, 0, Math.PI*2);
     heatmapCtx.fill();
-  });
+  }
 }
 
+/* Simulation Control Handlers */
 function toggleSim(){
   simRunning = !simRunning;
-  document.getElementById('simTimer').textContent = simRunning ? '시뮬레이션 상태: 실시간 연산 중 ▶' : '시뮬레이션 상태: 일시정지';
+  const btn = document.getElementById('btnToggleSim');
+  const timer = document.getElementById('simTimer');
+
+  if (simRunning) {
+    btn.textContent = '⏸ 시뮬레이션 일시정지';
+    btn.style.background = '#e2e8f0';
+    timer.textContent = '상태: 실시간 군중 시뮬레이션 연산 중 ▶';
+  } else {
+    btn.textContent = '▶ 시뮬레이션 시작';
+    btn.style.background = '#f1f5f9';
+    timer.textContent = '상태: 대기중';
+  }
+}
+
+function toggleRainEnv(){
+  isRain = !isRain;
+  const btn = document.getElementById('btnRain');
+  const badge = document.getElementById('envBadge');
+
+  if (isRain) {
+    btn.classList.add('active');
+    btn.textContent = '🌧️ 우천 모드 (ON)';
+    badge.textContent = '🌧️ 기상변수: 강우 발생';
+    badge.style.background = '#fef3c7';
+    badge.style.color = '#b45309';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🌧️ 우천 모드';
+    if(!isEmergency) {
+      badge.textContent = '일반 상태';
+      badge.style.background = '#eff6ff';
+      badge.style.color = '#2563eb';
+    }
+  }
+
+  if (venueCanvas) {
+    drawDetailedOutdoorVenue(venueCanvas.width, venueCanvas.height);
+  }
+}
+
+function triggerEmergencyEnv(){
+  isEmergency = !isEmergency;
+  const btn = document.getElementById('btnEmergency');
+  const badge = document.getElementById('envBadge');
+
+  if (isEmergency) {
+    btn.classList.add('active');
+    btn.textContent = '🚨 응급상황 해제';
+    badge.textContent = '🚨 긴급변수: 응급환자 발생!';
+    badge.style.background = '#fee2e2';
+    badge.style.color = '#b91c1c';
+
+    // Set emergency position in crowd area
+    const currentBooths = layoutHistory[currentLayoutIndex].booths;
+    const w = venueCanvas.width;
+    const h = venueCanvas.height;
+    emergencyPos = {
+      x: currentBooths.expA.x * w + 20,
+      y: currentBooths.expA.y * h + 30
+    };
+
+    // Auto start simulation to view emergency response
+    if(!simRunning) toggleSim();
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🚨 응급환자 발생';
+    emergencyPos = null;
+    medicalAgents = [];
+    if(!isRain) {
+      badge.textContent = '일반 상태';
+      badge.style.background = '#eff6ff';
+      badge.style.color = '#2563eb';
+    }
+  }
 }
 
 function sendChat(){
@@ -1147,10 +1676,14 @@ function sendChat(){
   const box = document.getElementById('chatBox');
   box.innerHTML += `<div style="color:#1e293b;background:#ffffff;padding:8px;border-radius:8px;margin-bottom:8px;text-align:right;"><b>나:</b> ${val}</div>`;
   document.getElementById('chatIn').value = '';
+  
   setTimeout(() => {
-    box.innerHTML += `<div style="color:#0369a1;background:#e0f2fe;padding:8px;border-radius:8px;margin-bottom:8px;"><b>AI:</b> "${val}" 요구사항을 반영하여 배치를 최적화했습니다.</div>`;
+    box.innerHTML += `<div style="color:#0369a1;background:#e0f2fe;padding:8px;border-radius:8px;margin-bottom:8px;"><b>AI:</b> "${val}" 요구사항을 분석하여 설계안을 새로 구성했습니다. 상단 '설계 히스토리'에 반영되었습니다.</div>`;
     box.scrollTop = box.scrollHeight;
-  }, 400);
+    
+    // Automatically trigger layout rebuild on custom AI chat requests
+    runAIGenerate();
+  }, 500);
 }
 
 window.addEventListener('load', () => {
