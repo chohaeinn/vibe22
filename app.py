@@ -2,21 +2,21 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Event AI - 오늘의집 스타일 행사장 인테리어 스튜디오",
-    page_icon="🏠",
+    page_title="Event AI - 오늘의집 스타일 행사장 종합 스튜디오",
+    page_icon="🎪",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-EVENT_STUDIO_HTML = r"""
+EVENT_STUDIO_ULTIMATE_HTML = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event AI Studio</title>
+<title>Event AI - Ultimate Studio</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-<!-- Three.js Library -->
+<!-- Three.js Library for 3D View -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -26,10 +26,13 @@ body{
   background:#f8fafc;
   overflow:hidden;
 }
-button,input,select{font:inherit;}
+button,input,select,textarea{font:inherit;}
 button{cursor:pointer;transition:all 0.2s ease;}
 
-/* Layout */
+::-webkit-scrollbar {width:6px;height:6px;}
+::-webkit-scrollbar-track {background:#f1f5f9;}
+::-webkit-scrollbar-thumb {background:#cbd5e1;border-radius:4px;}
+
 .app-container{
   display:flex;
   height:100vh;
@@ -37,18 +40,19 @@ button{cursor:pointer;transition:all 0.2s ease;}
   background:#f1f5f9;
 }
 
-/* Left Catalog Sidebar */
-.catalog-sidebar{
+/* Left Sidebar: Navigation & Catalog */
+.left-sidebar{
   width:260px;
   background:#0f172a;
   color:#94a3b8;
   padding:16px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:14px;
   border-right:1px solid #1e293b;
   flex-shrink:0;
   z-index:30;
+  overflow-y:auto;
 }
 .brand{
   display:flex;
@@ -59,203 +63,380 @@ button{cursor:pointer;transition:all 0.2s ease;}
   border-bottom:1px solid #1e293b;
 }
 .brand-icon{
-  width:32px;height:32px;
+  width:34px;height:34px;
   background:linear-gradient(135deg,#2563eb,#3b82f6);
-  border-radius:8px;
+  border-radius:10px;
   display:grid;place-items:center;
   font-weight:900;color:#fff;
+  box-shadow:0 4px 12px rgba(37,99,235,0.4);
 }
 .brand-title{font-size:16px;font-weight:800;color:#fff;}
 .brand-sub{font-size:10px;color:#64748b;}
 
+.nav-group{display:flex;flex-direction:column;gap:4px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:8px;
+  font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;
+}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:#f1f5f9;}
+.nav-item.active{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;}
+
 .catalog-section-title{
-  font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px;
+  font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin:6px 0 4px 0;letter-spacing:0.5px;
 }
 .catalog-grid{
   display:grid;
   grid-template-columns:repeat(2, 1fr);
-  gap:8px;
+  gap:6px;
 }
 .catalog-item{
   background:#1e293b;
   border:1px solid #334155;
-  border-radius:10px;
-  padding:10px;
+  border-radius:8px;
+  padding:8px;
   text-align:center;
   cursor:pointer;
   color:#f8fafc;
-  font-size:12px;
+  font-size:11.5px;
   font-weight:700;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:3px;
 }
 .catalog-item:hover{background:#2563eb;border-color:#3b82f6;}
-.catalog-item span{font-size:18px;}
+.catalog-item span{font-size:16px;}
 
-/* Center Canvas Area */
+/* Main Workspace */
 .main-workspace{
   flex:1;
   display:flex;
   flex-direction:column;
   position:relative;
-  overflow:hidden;
+  overflow-y:auto;
+  padding:16px;
+  gap:12px;
 }
 
-.workspace-topbar{
-  height:54px;
-  background:#ffffff;
-  border-bottom:1px solid #e2e8f0;
-  padding:0 20px;
+.top-header{
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  box-shadow:0 1px 3px rgba(0,0,0,0.02);
-  z-index:20;
+  align-items:center;
+  background:#ffffff;
+  padding:12px 20px;
+  border-radius:14px;
+  border:1px solid #e2e8f0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.02);
 }
-.workspace-title{font-size:15px;font-weight:800;color:#0f172a;}
+.top-title h2{font-size:17px;font-weight:800;color:#0f172a;}
+.top-title p{font-size:11.5px;color:#64748b;margin-top:1px;}
+
 .mode-toggle-group{
-  display:flex;gap:6px;background:#f1f5f9;padding:4px;border-radius:10px;border:1px solid #cbd5e1;
+  display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:10px;border:1px solid #cbd5e1;
 }
 .mode-btn{
-  background:transparent;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;
+  background:transparent;border:none;padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:700;color:#64748b;cursor:pointer;
 }
 .mode-btn.active{background:#ffffff;color:#2563eb;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
 
-.canvas-container{
-  flex:1;
-  position:relative;
-  background:#1e293b;
-  overflow:hidden;
+/* Dashboard Grids */
+.dashboard-grid{
+  display:grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap:12px;
 }
-canvas{
+.card-panel{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.02);
+  display:flex;
+  flex-direction:column;
+}
+.card-head{
+  font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;
+}
+.card-badge{
+  font-size:10px;background:#eff6ff;color:#2563eb;padding:2px 8px;border-radius:10px;font-weight:700;
+}
+
+/* Canvas Wrap */
+.map-wrap{
+  position:relative;
+  width:100%;
+  height:330px;
+  background:#1e293b;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid #334155;
+}
+#floorCanvas, #peopleCanvas, #heatmapCanvas, #container3D{
   position:absolute;inset:0;width:100%;height:100%;
 }
-#renderer3D{display:none;background:#0f172a;}
+#heatmapCanvas{z-index:5;opacity:0.85;pointer-events:none;}
+#peopleCanvas{z-index:10;pointer-events:none;}
+#container3D{z-index:15;display:none;background:#0f172a;}
 
-/* Right Property Inspector Sidebar */
-.inspector-sidebar{
-  width:280px;
+/* Sub Toolbar */
+.sub-toolbar{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.timeline-slider{accent-color:#2563eb;cursor:pointer;flex:1;max-width:220px;}
+.time-badge{background:#2563eb;color:#fff;font-weight:800;font-size:11.5px;padding:3px 8px;border-radius:12px;}
+
+.btn-primary{
+  background:linear-gradient(135deg, #2563eb, #1d4ed8);
+  color:#ffffff;border:none;padding:8px 16px;border-radius:10px;font-weight:800;font-size:12px;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+.btn-secondary{
+  background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;
+}
+.btn-warning{background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;}
+.btn-warning.active{background:#f59e0b;color:#fff;}
+.btn-danger{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;}
+.btn-danger.active{background:#ef4444;color:#fff;}
+
+/* Right Inspector Sidebar */
+.right-sidebar{
+  width:260px;
   background:#ffffff;
   border-left:1px solid #e2e8f0;
   padding:16px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:12px;
   flex-shrink:0;
   z-index:30;
   box-shadow:-2px 0 10px rgba(0,0,0,0.02);
+  overflow-y:auto;
 }
-.inspector-title{font-size:14px;font-weight:800;color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:8px;}
-.prop-group{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
-.prop-group label{font-size:11px;font-weight:700;color:#64748b;}
-.prop-group input{
-  padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-weight:600;background:#f8fafc;color:#0f172a;
-}
-.btn-danger{
-  background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:8px;border-radius:8px;font-size:12px;font-weight:700;width:100%;margin-top:auto;
-}
-.btn-primary{
-  background:#2563eb;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:800;width:100%;box-shadow:0 4px 12px rgba(37,99,235,0.3);
+.inspector-title{font-size:13px;font-weight:800;color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:6px;}
+.prop-group{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.prop-group label{font-size:10.5px;font-weight:700;color:#64748b;}
+.prop-group input, .prop-group select, .prop-group textarea{
+  padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:600;background:#f8fafc;color:#0f172a;outline:none;
 }
 
-/* Floating Toolbar on Canvas */
-.floating-toolbar{
-  position:absolute;
-  left:20px;bottom:20px;
-  z-index:25;
-  background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(6px);
-  padding:8px 12px;
-  border-radius:12px;
-  border:1px solid #e2e8f0;
-  box-shadow:0 4px 16px rgba(0,0,0,0.1);
-  display:flex;gap:8px;align-items:center;
+/* Modals */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:999;display:none;place-items:center;padding:20px;
 }
-.ft-btn{
-  background:#f1f5f9;border:1px solid #cbd5e1;padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:700;color:#334155;
-}
-.ft-btn.active{background:#2563eb;color:#fff;border-color:#1d4ed8;}
+.modal-bg.active{display:grid;}
+.modal-content{background:#fff;width:min(90%, 750px);max-height:85vh;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.form-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;}
 </style>
 </head>
 <body>
 
 <div class="app-container">
 
-  <!-- LEFT CATALOG SIDEBAR -->
-  <aside class="catalog-sidebar">
+  <!-- LEFT SIDEBAR: NAV & CATALOG -->
+  <aside class="left-sidebar">
     <div class="brand">
-      <div class="brand-icon">🏠</div>
+      <div class="brand-icon">🎪</div>
       <div>
         <div class="brand-title">Event Studio</div>
-        <div class="brand-sub">오늘의집 스타일 행사장 인테리어</div>
+        <div class="brand-sub">오늘의집 스타일 행사장 설계</div>
       </div>
     </div>
+
+    <nav class="nav-group">
+      <div class="nav-item active"><span>📋</span>행사 설계 대시보드</div>
+      <div class="nav-item" onclick="openConditionModal()"><span>⚙️</span>행사 조건 상세 설정</div>
+      <div class="nav-item" onclick="openReportModal()"><span>📊</span>종합 분석 리포트</div>
+    </nav>
 
     <div>
-      <div class="catalog-section-title">시설물 카탈로그</div>
+      <div class="catalog-section-title">시설물 카탈로그 (클릭 추가)</div>
       <div class="catalog-grid">
-        <div class="catalog-item" onclick="addObject('stage')"><span>🎭</span>무대/스탠드</div>
-        <div class="catalog-item" onclick="addObject('exp')"><span>🧪</span>체험 부스</div>
-        <div class="catalog-item" onclick="addObject('food')"><span>🍔</span>푸드트럭</div>
-        <div class="catalog-item" onclick="addObject('rest')"><span>🌳</span>잔디 휴식존</div>
-        <div class="catalog-item" onclick="addObject('medical')"><span>🏥</span>응급센터</div>
-        <div class="catalog-item" onclick="addObject('restroom')"><span>🚻</span>화장실</div>
+        <div class="catalog-item" onclick="addCatalogObject('stage')"><span>🎭</span>메인무대</div>
+        <div class="catalog-item" onclick="addCatalogObject('exp')"><span>🧪</span>체험부스</div>
+        <div class="catalog-item" onclick="addCatalogObject('food')"><span>🍔</span>푸드트럭</div>
+        <div class="catalog-item" onclick="addCatalogObject('rest')"><span>🌳</span>잔디휴식존</div>
+        <div class="catalog-item" onclick="addCatalogObject('medical')"><span>🏥</span>응급센터</div>
+        <div class="catalog-item" onclick="addCatalogObject('restroom')"><span>🚻</span>화장실</div>
       </div>
     </div>
 
-    <div style="margin-top:auto;background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;font-size:11px;line-height:1.4;color:#94a3b8;">
-      💡 <b>사용 팁:</b><br>
-      • 카탈로그 아이템을 클릭해 추가하세요.<br>
-      • 캔버스에서 드래그하여 이동합니다.<br>
-      • 클릭하면 우측에서 속성을 편집할 수 있습니다.
+    <div style="margin-top:auto;background:rgba(255,255,255,0.05);padding:10px;border-radius:10px;font-size:10.5px;line-height:1.4;color:#94a3b8;">
+      💡 <b>사용 방법:</b><br>
+      • 상단 <b>[행사 조건 상세 설정]</b>에서 조건 변경 가능<br>
+      • 카탈로그 클릭 시 캔버스 중앙에 부스 배치<br>
+      • 캔버스에서 드래그하여 자유로운 위치 조정
     </div>
   </aside>
 
   <!-- MAIN WORKSPACE -->
   <main class="main-workspace">
-    <header class="workspace-topbar">
-      <div class="workspace-title" id="projectTitle">2025 힐링 페스티벌 행사장 설계 (50,000m²)</div>
+    <header class="top-header">
+      <div class="top-title">
+        <h2 id="headerEventName">2025 힐링 페스티벌 행사장 설계</h2>
+        <p id="headerEventSub">야외 잔디 광장 (50,000m²) · 예상 관람객 5,000명</p>
+      </div>
       <div class="mode-toggle-group">
         <button class="mode-btn active" id="btn2D" onclick="switchMode('2d')">2D 도면 편집</button>
-        <button class="mode-btn" id="btn3D" onclick="switchMode('3d')">3D 입체 인테리어</button>
+        <button class="mode-btn" id="btn3D" onclick="switchMode('3d')">3D 입체 뷰</button>
       </div>
     </header>
 
-    <div class="canvas-container" id="canvasWrap">
-      <canvas id="floorCanvas"></canvas>
-      <canvas id="simCanvas"></canvas>
-      <div id="renderer3D"></div>
+    <!-- Sub Toolbar: Timeline & Modes -->
+    <div class="sub-toolbar">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;">
+        <span style="font-size:11.5px;font-weight:800;">⏰ 시간 시뮬:</span>
+        <button class="btn-secondary" id="btnTimelinePlay" onclick="toggleTimelinePlay()">▶ 재생</button>
+        <input type="range" id="timeSlider" class="timeline-slider" min="10" max="20" step="1" value="14" oninput="updateTimeSimulation(this.value)">
+        <div class="time-badge" id="timeDisplay">14:00</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-warning" id="btnRain" onclick="toggleRainEnv()">🌧️ 우천모드</button>
+        <button class="btn-danger" id="btnEmergency" onclick="triggerEmergencyEnv()">🚨 응급후송</button>
+      </div>
+    </div>
 
-      <!-- Floating Toolbar -->
-      <div class="floating-toolbar">
-        <button class="ft-btn active" id="btnSimToggle" onclick="toggleSim()">▶ 군중 시뮬레이션</button>
-        <button class="ft-btn active" id="btnHeatmapToggle" onclick="toggleHeatmap()">🔥 히트맵 켜기</button>
-        <button class="ft-btn" onclick="clearAllObjects()">전체 초기화</button>
+    <!-- Main Canvas Grid -->
+    <div class="dashboard-grid">
+      <!-- 2D & 3D Canvas Panel -->
+      <div class="card-panel">
+        <div class="card-head">
+          <span>🗺️ 행사장 디지털 트윈 캔버스</span>
+          <span class="card-badge" id="canvasStatusBadge">편집 모드 활성</span>
+        </div>
+        <div class="map-wrap" id="mapWrap">
+          <canvas id="floorCanvas"></canvas>
+          <canvas id="peopleCanvas"></canvas>
+          <canvas id="heatmapCanvas"></canvas>
+          <div id="container3D"></div>
+        </div>
+      </div>
+
+      <!-- Quick Analysis & Summary Panel -->
+      <div class="card-panel">
+        <div class="card-head">
+          <span>📈 실시간 분석 요약</span>
+          <span class="card-badge" style="background:#dcfce7;color:#15803d;">안전도 최적</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:#334155;line-height:1.6;flex:1;">
+          <div style="background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;">
+            <b>• 행사 유형:</b> <span id="summaryVenueType" style="color:#2563eb;font-weight:700;">야외 잔디 광장</span>
+          </div>
+          <div style="background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;">
+            <b>• 병목 발생 예측율:</b> <span style="color:#10b981;font-weight:800;">14% (매우 낮음)</span>
+          </div>
+          <div style="background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;">
+            <b>• 응급 이송 골든타임:</b> <span style="color:#2563eb;font-weight:800;">1분 12초 확보</span>
+          </div>
+          <div style="background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;">
+            <b>• 배치된 시설물 수:</b> <span id="totalObjCount" style="font-weight:800;">6개</span>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%;text-align:center;margin-top:auto;" onclick="openReportModal()">
+          📌 상세 종합 보고서 보기
+        </button>
       </div>
     </div>
   </main>
 
-  <!-- RIGHT PROPERTY INSPECTOR -->
-  <aside class="inspector-sidebar">
-    <div class="inspector-title">⚙️ 오브젝트 속성 편집</div>
-    <div id="inspectorContent" style="display:flex;flex-direction:column;gap:10px;">
-      <p style="font-size:12px;color:#64748b;text-align:center;margin-top:40px;">선택된 오브젝트가 없습니다.<br>도면의 시설물을 클릭하세요.</p>
+  <!-- RIGHT INSPECTOR SIDEBAR -->
+  <aside class="right-sidebar">
+    <div class="inspector-title">⚙️ 속성 인스펙터</div>
+    <div id="inspectorContent" style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:11.5px;color:#64748b;text-align:center;margin-top:50px;">선택된 시설물이 없습니다.<br>도면에서 시설물을 클릭하세요.</p>
     </div>
-    <button class="btn-primary" style="margin-top:10px;" onclick="saveProjectState()">설계안 저장</button>
+    <button class="btn-primary" style="margin-top:auto;" onclick="alert('설계안이 저장되었습니다!')">설계안 저장</button>
   </aside>
 
 </div>
 
+<!-- EVENT CONDITION SETTINGS MODAL -->
+<div class="modal-bg" id="conditionModal">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+      <h3 style="font-size:16px;font-weight:800;">⚙️ 행사 조건 상세 설정</h3>
+      <button onclick="closeConditionModal()" style="border:none;background:none;font-size:18px;font-weight:800;">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="prop-group">
+        <label>📌 행사명</label>
+        <input type="text" id="inEventName" value="2025 힐링 페스티벌">
+      </div>
+      <div class="prop-group">
+        <label>🏞️ 행사장 유형</label>
+        <select id="inVenueType">
+          <option value="야외 잔디 광장" selected>야외 잔디 광장</option>
+          <option value="실내 컨벤션 홀">실내 컨벤션 홀</option>
+          <option value="실내 체육관">실내 체육관</option>
+          <option value="도심 스트리트/광장">도심 스트리트/광장</option>
+        </select>
+      </div>
+      <div class="prop-group">
+        <label>👥 예상 관람객 수</label>
+        <select id="inVisitors">
+          <option value="1,000명">1,000명</option>
+          <option value="3,000명">3,000명</option>
+          <option value="5,000명" selected>5,000명</option>
+          <option value="10,000명 이상">10,000명 이상</option>
+        </select>
+      </div>
+      <div class="prop-group">
+        <label>📐 행사장 면적</label>
+        <input type="text" id="inArea" value="50,000m²">
+      </div>
+      <div class="prop-group">
+        <label>⏰ 운영 시간</label>
+        <input type="text" id="inTime" value="10시 - 20시">
+      </div>
+      <div class="prop-group">
+        <label>💰 예산 규모</label>
+        <input type="text" id="inBudget" value="5,000만원">
+      </div>
+      <div class="prop-group" style="grid-column: 1 / -1;">
+        <label>💬 AI 배치 세부 프롬프트 / 요구사항</label>
+        <textarea id="inPrompt" rows="2" style="width:100%;">메인 무대는 상단에 배치하고, 푸드트럭과 체험 부스를 원형 광장 주변으로 배치해주세요.</textarea>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+      <button class="btn-secondary" onclick="closeConditionModal()">취소</button>
+      <button class="btn-primary" onclick="saveEventConditions()">조건 적용하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+      <h3 style="font-size:16px;font-weight:800;">📊 행사장 설계 및 동선 분석 종합 보고서</h3>
+      <button onclick="closeReportModal()" style="border:none;background:none;font-size:18px;font-weight:800;">✕</button>
+    </div>
+    <p style="font-size:12px;line-height:1.6;color:#334155;" id="reportDesc">
+      본 보고서는 오늘의집 스타일 인터페이스로 구성된 <b>2025 힐링 페스티벌</b>(야외 잔디 광장 50,000m², 예상 관람객 5,000명)의 구역 배치와 실시간 군중 시뮬레이션 결과입니다.
+    </p>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+      <button class="btn-secondary" onclick="closeReportModal()">닫기</button>
+      <button class="btn-primary" onclick="alert('PDF 다운로드가 완료되었습니다.');closeReportModal();">PDF 다운로드</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* APPLICATION STATE & OBJECT CATALOG */
+/* APPLICATION STATE & OBJECTS */
 let objects = [
-  { id: 1, type: 'stage', title: '메인 무대 & 객석', x: 250, y: 50, w: 220, h: 100, color: '#8b5cf6', icon: '🎭' },
-  { id: 2, type: 'exp', title: '체험 부스 A', x: 60, y: 180, w: 120, h: 90, color: '#3b82f6', icon: '🧪' },
-  { id: 3, type: 'exp', title: '체험 부스 B', x: 600, y: 180, w: 120, h: 90, color: '#3b82f6', icon: '🚀' },
-  { id: 4, type: 'food', title: '푸드트럭 구역', x: 60, y: 320, w: 140, h: 90, color: '#f59e0b', icon: '🍔' },
-  { id: 5, type: 'medical', title: '응급 의료센터', x: 600, y: 320, w: 130, h: 90, color: '#ef4444', icon: '🏥' },
-  { id: 6, type: 'rest', title: '잔디 휴식존', x: 280, y: 220, w: 180, h: 120, color: '#10b981', icon: '🌳' }
+  { id: 1, type: 'stage', title: '메인 무대 & 객석', x: 220, y: 30, w: 200, h: 90, color: '#8b5cf6', icon: '🎭' },
+  { id: 2, type: 'exp', title: '체험 부스 A', x: 40, y: 150, w: 120, h: 80, color: '#3b82f6', icon: '🧪' },
+  { id: 3, type: 'exp', title: '체험 부스 B', x: 480, y: 150, w: 120, h: 80, color: '#3b82f6', icon: '🚀' },
+  { id: 4, type: 'food', title: '푸드트럭 구역', x: 40, y: 260, w: 130, h: 80, color: '#f59e0b', icon: '🍔' },
+  { id: 5, type: 'medical', title: '응급 의료센터', x: 480, y: 260, w: 120, h: 80, color: '#ef4444', icon: '🏥' },
+  { id: 6, type: 'rest', title: '잔디 휴식광장', x: 240, y: 160, w: 160, h: 100, color: '#10b981', icon: '🌳' }
 ];
 
 let selectedId = null;
@@ -263,48 +444,73 @@ let isDragging = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 
-let currentMode = '2d'; // '2d' or '3d'
+let currentMode = '2d';
 let simRunning = true;
-let showHeatmap = true;
+let isRain = false;
+let isEmergency = false;
+let emergencyPos = null;
 
-let floorCanvas, floorCtx, simCanvas, simCtx;
+let floorCanvas, floorCtx, peopleCanvas, peopleCtx, heatmapCanvas, heatmapCtx;
 let crowdAgents = [];
+let raindrops = [];
 
-/* INITIALIZATION */
 window.addEventListener('load', () => {
   floorCanvas = document.getElementById('floorCanvas');
-  simCanvas = document.getElementById('simCanvas');
+  peopleCanvas = document.getElementById('peopleCanvas');
+  heatmapCanvas = document.getElementById('heatmapCanvas');
+
   floorCtx = floorCanvas.getContext('2d');
-  simCtx = simCanvas.getContext('2d');
+  peopleCtx = peopleCanvas.getContext('2d');
+  heatmapCtx = heatmapCanvas.getContext('2d');
 
   resizeCanvases();
   window.addEventListener('resize', resizeCanvases);
 
   initCrowd();
-  setupCanvasEvents();
+  initRain();
+  setupEvents();
   renderLoop();
 });
 
 function resizeCanvases() {
-  const wrap = document.getElementById('canvasWrap');
+  const wrap = document.getElementById('mapWrap');
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
-  [floorCanvas, simCanvas].forEach(c => {
+  [floorCanvas, peopleCanvas, heatmapCanvas].forEach(c => {
     c.width = w;
     c.height = h;
   });
   redraw2D();
 }
 
-/* CATALOG ADD OBJECT */
-function addObject(type) {
+/* EVENT CONDITION MODAL */
+function openConditionModal() { document.getElementById('conditionModal').classList.add('active'); }
+function closeConditionModal() { document.getElementById('conditionModal').classList.remove('active'); }
+
+function saveEventConditions() {
+  const name = document.getElementById('inEventName').value;
+  const vType = document.getElementById('inVenueType').value;
+  const visitors = document.getElementById('inVisitors').value;
+  const area = document.getElementById('inArea').value;
+
+  document.getElementById('headerEventName').textContent = name;
+  document.getElementById('headerEventSub').textContent = `${vType} (${area}) · 예상 관람객 ${visitors}`;
+  document.getElementById('summaryVenueType').textContent = vType;
+  document.getElementById('reportDesc').innerHTML = `본 보고서는 오늘의집 스타일 인터페이스로 구성된 <b>${name}</b>(${vType} ${area}, 예상 관람객 ${visitors})의 구역 배치와 실시간 군중 시뮬레이션 결과입니다.`;
+
+  closeConditionModal();
+  alert('행사 조건이 성공적으로 반영되었습니다!');
+}
+
+/* CATALOG ADD */
+function addCatalogObject(type) {
   const meta = {
-    stage: { title: '대형 무대', w: 200, h: 90, color: '#8b5cf6', icon: '🎭' },
-    exp: { title: '신규 체험부스', w: 120, h: 90, color: '#3b82f6', icon: '🧪' },
-    food: { title: '푸드트럭', w: 130, h: 90, color: '#f59e0b', icon: '🍔' },
-    rest: { title: '휴식 광장', w: 160, h: 110, color: '#10b981', icon: '🌳' },
-    medical: { title: '응급센터', w: 120, h: 90, color: '#ef4444', icon: '🏥' },
-    restroom: { title: '화장실', w: 110, h: 80, color: '#06b6d4', icon: '🚻' }
+    stage: { title: '대형 무대', w: 180, h: 85, color: '#8b5cf6', icon: '🎭' },
+    exp: { title: '신규 체험부스', w: 110, h: 75, color: '#3b82f6', icon: '🧪' },
+    food: { title: '푸드트럭', w: 120, h: 75, color: '#f59e0b', icon: '🍔' },
+    rest: { title: '휴식존', w: 140, h: 90, color: '#10b981', icon: '🌳' },
+    medical: { title: '응급센터', w: 110, h: 75, color: '#ef4444', icon: '🏥' },
+    restroom: { title: '화장실', w: 100, h: 70, color: '#06b6d4', icon: '🚻' }
   }[type];
 
   const newItem = {
@@ -323,64 +529,52 @@ function addObject(type) {
   selectedId = newItem.id;
   updateInspector();
   redraw2D();
+  document.getElementById('totalObjCount').textContent = objects.length + '개';
 }
 
-/* 2D CANVAS RENDERING */
+/* 2D RENDERING */
 function redraw2D() {
   if (!floorCtx) return;
   const w = floorCanvas.width;
   const h = floorCanvas.height;
 
-  floorCtx.clearRect(0, 0, w, h);
-
-  // Background Grass Field
-  floorCtx.fillStyle = '#3a7d44';
+  floorCtx.fillStyle = isRain ? '#254e2b' : '#3a7d44';
   floorCtx.fillRect(0, 0, w, h);
 
-  // Grid lines (Ohouse Blueprint Style)
-  floorCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+  // Grid
+  floorCtx.strokeStyle = 'rgba(255,255,255,0.06)';
   floorCtx.lineWidth = 1;
-  for(let x=0; x<w; x+=40){
+  for(let x=0; x<w; x+=35){
     floorCtx.beginPath(); floorCtx.moveTo(x, 0); floorCtx.lineTo(x, h); floorCtx.stroke();
   }
-  for(let y=0; y<h; y+=40){
+  for(let y=0; y<h; y+=35){
     floorCtx.beginPath(); floorCtx.moveTo(0, y); floorCtx.lineTo(w, y); floorCtx.stroke();
   }
 
   // Draw Objects
   objects.forEach(obj => {
-    // Shadow
     floorCtx.fillStyle = 'rgba(0,0,0,0.3)';
-    floorCtx.fillRect(obj.x + 4, obj.y + 4, obj.w, obj.h);
+    floorCtx.fillRect(obj.x + 3, obj.y + 3, obj.w, obj.h);
 
-    // Body
     floorCtx.fillStyle = obj.color;
     floorCtx.beginPath();
     floorCtx.roundRect(obj.x, obj.y, obj.w, obj.h, 8);
     floorCtx.fill();
 
-    // Selection Border
-    if (selectedId === obj.id) {
-      floorCtx.strokeStyle = '#ffffff';
-      floorCtx.lineWidth = 3;
-      floorCtx.stroke();
-    } else {
-      floorCtx.strokeStyle = 'rgba(255,255,255,0.6)';
-      floorCtx.lineWidth = 1.5;
-      floorCtx.stroke();
-    }
+    floorCtx.strokeStyle = (selectedId === obj.id) ? '#ffffff' : 'rgba(255,255,255,0.6)';
+    floorCtx.lineWidth = (selectedId === obj.id) ? 3 : 1.5;
+    floorCtx.stroke();
 
-    // Label & Icon
     floorCtx.fillStyle = '#ffffff';
-    floorCtx.font = 'bold 12px Pretendard, sans-serif';
+    floorCtx.font = 'bold 11.5px Pretendard, sans-serif';
     floorCtx.textAlign = 'center';
     floorCtx.textBaseline = 'middle';
     floorCtx.fillText(`${obj.icon} ${obj.title}`, obj.x + obj.w / 2, obj.y + obj.h / 2);
   });
 }
 
-/* INTERACTION & DRAGGING */
-function setupCanvasEvents() {
+/* MOUSE EVENTS & DRAGGING */
+function setupEvents() {
   floorCanvas.onmousedown = (e) => {
     if (currentMode !== '2d') return;
     const rect = floorCanvas.getBoundingClientRect();
@@ -388,7 +582,6 @@ function setupCanvasEvents() {
     const my = e.clientY - rect.top;
 
     selectedId = null;
-    // Check from top-most (reverse order)
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
       if (mx >= obj.x && mx <= obj.x + obj.w && my >= obj.y && my <= obj.y + obj.h) {
@@ -396,7 +589,6 @@ function setupCanvasEvents() {
         isDragging = true;
         dragOffsetX = mx - obj.x;
         dragOffsetY = my - obj.y;
-        // Bring to front
         objects.push(objects.splice(i, 1)[0]);
         break;
       }
@@ -419,28 +611,26 @@ function setupCanvasEvents() {
     }
   };
 
-  window.onmouseup = () => {
-    isDragging = false;
-  };
+  window.onmouseup = () => { isDragging = false; };
 }
 
-/* PROPERTY INSPECTOR PANEL */
+/* INSPECTOR PANEL */
 function updateInspector() {
   const box = document.getElementById('inspectorContent');
   const obj = objects.find(o => o.id === selectedId);
 
   if (!obj) {
-    box.innerHTML = `<p style="font-size:12px;color:#64748b;text-align:center;margin-top:40px;">선택된 오브젝트가 없습니다.<br>도면의 시설물을 클릭하세요.</p>`;
+    box.innerHTML = `<p style="font-size:11.5px;color:#64748b;text-align:center;margin-top:50px;">선택된 시설물이 없습니다.<br>도면에서 시설물을 클릭하세요.</p>`;
     return;
   }
 
   box.innerHTML = `
-    <div class="prop-group"><label>오브젝트 이름</label><input type="text" id="propTitle" value="${obj.title}" oninput="updateProp('title', this.value)"></div>
-    <div class="prop-group"><label>가로 크기 (Width)</label><input type="number" id="propW" value="${obj.w}" oninput="updateProp('w', parseInt(this.value)||50)"></div>
-    <div class="prop-group"><label>세로 크기 (Height)</label><input type="number" id="propH" value="${obj.h}" oninput="updateProp('h', parseInt(this.value)||50)"></div>
-    <div class="prop-group"><label>X 좌표</label><input type="number" id="propX" value="${Math.round(obj.x)}" oninput="updateProp('x', parseInt(this.value)||0)"></div>
-    <div class="prop-group"><label>Y 좌표</label><input type="number" id="propY" value="${Math.round(obj.y)}" oninput="updateProp('y', parseInt(this.value)||0)"></div>
-    <button class="btn-danger" onclick="deleteSelectedObject()">오브젝트 삭제</button>
+    <div class="prop-group"><label>시설물 이름</label><input type="text" value="${obj.title}" oninput="updateProp('title', this.value)"></div>
+    <div class="prop-group"><label>너비 (Width)</label><input type="number" value="${obj.w}" oninput="updateProp('w', parseInt(this.value)||40)"></div>
+    <div class="prop-group"><label>높이 (Height)</label><input type="number" value="${obj.h}" oninput="updateProp('h', parseInt(this.value)||40)"></div>
+    <div class="prop-group"><label>X 좌표</label><input type="number" value="${Math.round(obj.x)}" oninput="updateProp('x', parseInt(this.value)||0)"></div>
+    <div class="prop-group"><label>Y 좌표</label><input type="number" value="${Math.round(obj.y)}" oninput="updateProp('y', parseInt(this.value)||0)"></div>
+    <button class="btn-danger" style="width:100%;margin-top:8px;" onclick="deleteSelected()">시설물 삭제</button>
   `;
 }
 
@@ -452,83 +642,86 @@ function updateProp(key, val) {
   }
 }
 
-function deleteSelectedObject() {
+function deleteSelected() {
   if (selectedId) {
     objects = objects.filter(o => o.id !== selectedId);
     selectedId = null;
     updateInspector();
     redraw2D();
+    document.getElementById('totalObjCount').textContent = objects.length + '개';
   }
 }
 
-function clearAllObjects() {
-  if (confirm('모든 시설물을 초기화하시겠습니까?')) {
-    objects = [];
-    selectedId = null;
-    updateInspector();
-    redraw2D();
-  }
-}
-
-function saveProjectState() {
-  alert('성공적으로 설계안이 저장되었습니다!');
-}
-
-/* CROWD SIMULATION & HEATMAP ENGINE */
+/* CROWD SIMULATION & HEATMAP */
 function initCrowd() {
   crowdAgents = [];
-  for(let i=0; i<60; i++){
+  for(let i=0; i<65; i++){
     crowdAgents.push({
-      x: 100 + Math.random()*600,
-      y: 100 + Math.random()*400,
+      x: 50 + Math.random()*500,
+      y: 50 + Math.random()*300,
       vx: (Math.random()-0.5)*1.2,
       vy: (Math.random()-0.5)*1.2
     });
   }
 }
 
+function initRain() {
+  raindrops = [];
+  for(let i=0; i<80; i++){
+    raindrops.push({ x: Math.random()*700, y: Math.random()*400, len: 10, vy: 5 });
+  }
+}
+
 function updateSimulation() {
-  if (!simRunning || !simCtx) return;
-  const w = simCanvas.width;
-  const h = simCanvas.height;
+  if (!simRunning || !peopleCtx || !heatmapCtx) return;
+  const w = peopleCanvas.width;
+  const h = peopleCanvas.height;
 
-  simCtx.clearRect(0, 0, w, h);
+  peopleCtx.clearRect(0,0,w,h);
+  heatmapCtx.clearRect(0,0,w,h);
 
-  // Heatmap Layer
-  if (showHeatmap) {
-    objects.forEach(obj => {
-      const cx = obj.x + obj.w / 2;
-      const cy = obj.y + obj.h / 2;
-      let grad = simCtx.createRadialGradient(cx, cy, 5, cx, cy, 90);
-      grad.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
-      grad.addColorStop(0.5, 'rgba(245, 158, 11, 0.2)');
-      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-      simCtx.fillStyle = grad;
-      simCtx.beginPath(); simCtx.arc(cx, cy, 90, 0, Math.PI*2); simCtx.fill();
-    });
+  objects.forEach(obj => {
+    const cx = obj.x + obj.w / 2;
+    const cy = obj.y + obj.h / 2;
+    let grad = heatmapCtx.createRadialGradient(cx, cy, 5, cx, cy, 80);
+    grad.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
+    grad.addColorStop(0.5, 'rgba(245, 158, 11, 0.2)');
+    grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    heatmapCtx.fillStyle = grad;
+    heatmapCtx.beginPath(); heatmapCtx.arc(cx, cy, 80, 0, Math.PI*2); heatmapCtx.fill();
+  });
+
+  if (isEmergency && emergencyPos) {
+    const med = objects.find(o => o.type === 'medical') || objects[0];
+    const mx = med.x + med.w/2;
+    const my = med.y + med.h/2;
+    peopleCtx.strokeStyle = '#ef4444';
+    peopleCtx.lineWidth = 3;
+    peopleCtx.setLineDash([6, 4]);
+    peopleCtx.beginPath(); peopleCtx.moveTo(emergencyPos.x, emergencyPos.y); peopleCtx.lineTo(mx, my); peopleCtx.stroke();
+    peopleCtx.setLineDash([]);
+
+    peopleCtx.fillStyle = '#ef4444';
+    peopleCtx.beginPath(); peopleCtx.arc(emergencyPos.x, emergencyPos.y, 8, 0, Math.PI*2); peopleCtx.fill();
   }
 
-  // Crowd Agents
   crowdAgents.forEach(p => {
     p.x += p.vx; p.y += p.vy;
-    if(p.x < 20 || p.x > w-20) p.vx *= -1;
-    if(p.y < 20 || p.y > h-20) p.vy *= -1;
+    if(p.x < 10 || p.x > w-10) p.vx *= -1;
+    if(p.y < 10 || p.y > h-10) p.vy *= -1;
 
-    simCtx.fillStyle = '#ffffff';
-    simCtx.beginPath();
-    simCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
-    simCtx.fill();
+    peopleCtx.fillStyle = isRain ? '#60a5fa' : '#ffffff';
+    peopleCtx.beginPath(); peopleCtx.arc(p.x, p.y, 3, 0, Math.PI*2); peopleCtx.fill();
   });
-}
 
-function toggleSim() {
-  simRunning = !simRunning;
-  document.getElementById('btnSimToggle').classList.toggle('active', simRunning);
-}
-
-function toggleHeatmap() {
-  showHeatmap = !showHeatmap;
-  document.getElementById('btnHeatmapToggle').classList.toggle('active', showHeatmap);
+  if (isRain) {
+    peopleCtx.strokeStyle = 'rgba(147, 197, 253, 0.6)';
+    raindrops.forEach(r => {
+      r.y += r.vy;
+      if(r.y > h) r.y = 0;
+      peopleCtx.beginPath(); peopleCtx.moveTo(r.x, r.y); peopleCtx.lineTo(r.x-1, r.y+r.len); peopleCtx.stroke();
+    });
+  }
 }
 
 function renderLoop() {
@@ -538,36 +731,67 @@ function renderLoop() {
   requestAnimationFrame(renderLoop);
 }
 
-/* MODE SWITCHING (2D <-> 3D THREE.JS) */
+/* CONTROLS */
+let timeInterval = null;
+let currentTime = 14;
+function updateTimeSimulation(val) {
+  currentTime = parseInt(val);
+  document.getElementById('timeDisplay').textContent = `${currentTime}:00`;
+}
+function toggleTimelinePlay() {
+  const btn = document.getElementById('btnTimelinePlay');
+  if (timeInterval) {
+    clearInterval(timeInterval); timeInterval = null;
+    btn.textContent = '▶ 재생';
+  } else {
+    btn.textContent = '⏸ 정지';
+    timeInterval = setInterval(() => {
+      currentTime = currentTime >= 20 ? 10 : currentTime + 1;
+      document.getElementById('timeSlider').value = currentTime;
+      updateTimeSimulation(currentTime);
+    }, 1500);
+  }
+}
+function toggleRainEnv() {
+  isRain = !isRain;
+  document.getElementById('btnRain').classList.toggle('active', isRain);
+  redraw2D();
+}
+function triggerEmergencyEnv() {
+  isEmergency = !isEmergency;
+  document.getElementById('btnEmergency').classList.toggle('active', isEmergency);
+  emergencyPos = isEmergency ? { x: 150, y: 150 } : null;
+}
+
+function openReportModal() { document.getElementById('reportModal').classList.add('active'); }
+function closeReportModal() { document.getElementById('reportModal').classList.remove('active'); }
+
+/* MODE SWITCHING & 3D */
 function switchMode(mode) {
   currentMode = mode;
   document.getElementById('btn2D').classList.toggle('active', mode === '2d');
   document.getElementById('btn3D').classList.toggle('active', mode === '3d');
 
-  const fCanvas = document.getElementById('floorCanvas');
-  const sCanvas = document.getElementById('simCanvas');
-  const r3D = document.getElementById('renderer3D');
+  const fC = document.getElementById('floorCanvas');
+  const pC = document.getElementById('peopleCanvas');
+  const hC = document.getElementById('heatmapCanvas');
+  const r3 = document.getElementById('container3D');
 
   if (mode === '3d') {
-    fCanvas.style.display = 'none';
-    sCanvas.style.display = 'none';
-    r3D.style.display = 'block';
+    fC.style.display = 'none'; pC.style.display = 'none'; hC.style.display = 'none';
+    r3.style.display = 'block';
     init3DScene();
   } else {
-    fCanvas.style.display = 'block';
-    sCanvas.style.display = 'block';
-    r3D.style.display = 'none';
+    fC.style.display = 'block'; pC.style.display = 'block'; hC.style.display = 'block';
+    r3.style.display = 'none';
     redraw2D();
   }
 }
 
-/* THREE.JS 3D INTERIOR ENGINE */
 let scene3D, camera3D, renderer3D;
-
 function init3DScene() {
-  const container = document.getElementById('renderer3D');
+  const container = document.getElementById('container3D');
   container.innerHTML = '';
-
   const w = container.clientWidth;
   const h = container.clientHeight;
 
@@ -575,47 +799,38 @@ function init3DScene() {
   scene3D.background = new THREE.Color(0x0f172a);
 
   camera3D = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-  camera3D.position.set(0, 300, 350);
+  camera3D.position.set(0, 280, 320);
   camera3D.lookAt(0, 0, 0);
 
   renderer3D = new THREE.WebGLRenderer({ antialias: true });
   renderer3D.setSize(w, h);
   container.appendChild(renderer3D.domElement);
 
-  // Lighting
   scene3D.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(100, 200, 100);
-  scene3D.add(dirLight);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(100, 200, 100);
+  scene3D.add(dir);
 
-  // Ground Plane
-  const groundGeo = new THREE.PlaneGeometry(800, 600);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x3a7d44 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(700, 500), new THREE.MeshLambertMaterial({ color: 0x3a7d44 }));
   ground.rotation.x = -Math.PI / 2;
   scene3D.add(ground);
 
-  // Build 3D meshes from 2D objects
   objects.forEach(obj => {
     const bw = obj.w;
     const bh = obj.h;
     const bx = obj.x - w / 2 + bw / 2;
     const bz = obj.y - h / 2 + bh / 2;
-    const height = obj.type === 'stage' ? 25 : 14;
+    const height = obj.type === 'stage' ? 22 : 12;
 
-    const geo = new THREE.BoxGeometry(bw, height, bh);
-    const colorHex = parseInt(obj.color.replace('#', '0x'));
-    const mat = new THREE.MeshLambertMaterial({ color: colorHex });
-    const mesh = new THREE.Mesh(geo, mat);
-
-    mesh.position.set(bx, height / 2, bz);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(bw, height, bh), new THREE.MeshLambertMaterial({ color: parseInt(obj.color.replace('#','0x')) }));
+    mesh.position.set(bx, height/2, bz);
     scene3D.add(mesh);
   });
 
   function animate3D() {
     if (currentMode === '3d') {
       requestAnimationFrame(animate3D);
-      scene3D.rotation.y += 0.002; // Auto rotate for showroom feel
+      scene3D.rotation.y += 0.002;
       renderer3D.render(scene3D, camera3D);
     }
   }
@@ -626,4 +841,4 @@ function init3DScene() {
 </html>
 """
 
-components.html(EVENT_STUDIO_HTML, height=850, scrolling=False)
+components.html(EVENT_STUDIO_ULTIMATE_HTML, height=850, scrolling=False)
